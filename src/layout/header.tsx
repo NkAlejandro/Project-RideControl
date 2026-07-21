@@ -5,9 +5,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/components/auth-provider";
 import { useNotifications } from "@/hooks/use-notifications";
 import { useSettings } from "@/hooks/use-settings";
-import { useAppStore } from "@/store/use-app-store";
 import { cn } from "@/lib/utils";
 import { useHoverSound } from "@/lib/use-sounds";
+import { useAppStore, currencies } from "@/store/use-app-store";
 
 const iconMap = {
   maintenance: Wrench,
@@ -32,6 +32,8 @@ interface HeaderProps {
 export function Header({ onMenuToggle }: HeaderProps) {
   const { hover } = useHoverSound();
   const { user, logout } = useAuth();
+  const selectedCurrency = useAppStore((s) => s.selectedCurrency);
+  const setSelectedCurrency = useAppStore((s) => s.setSelectedCurrency);
   const { notifications, count } = useNotifications();
   const { settings, update: updateSettings } = useSettings();
   const appSettings = useAppStore((s) => s.settings);
@@ -209,6 +211,43 @@ export function Header({ onMenuToggle }: HeaderProps) {
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-semibold text-primary-color truncate">{email || "Usuario"}</p>
                       <p className="text-xs text-muted-color">Cuenta activa</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Currency Selector */}
+                <div className="border-t border-theme-subtle">
+                  <div className="px-4 py-2">
+                    <p className="text-[11px] font-medium uppercase tracking-wider text-muted-color">Moneda</p>
+                  </div>
+                  <div className="max-h-40 overflow-y-auto overscroll-contain px-2 pb-2">
+                    <div className="space-y-0.5">
+                      {currencies.map((c) => {
+                        const active = selectedCurrency === c.code;
+                        return (
+                          <button
+                            key={c.code}
+                            onMouseEnter={() => hover("tap")}
+                            onClick={() => {
+                              setSelectedCurrency(c.code);
+                              closeAll();
+                            }}
+                            className={cn(
+                              "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition-colors",
+                              active ? "bg-primary-500/10 text-primary-500" : "text-secondary-color hover:bg-hover hover:text-primary-color",
+                            )}
+                          >
+                            <span className="text-base">{c.flag}</span>
+                            <span className="flex-1">
+                              <span className={cn("font-medium", active && "text-primary-500")}>{c.code}</span>
+                              <span className="ml-1.5 text-xs text-muted-color">{c.label}</span>
+                            </span>
+                            {active && (
+                              <span className="h-1.5 w-1.5 rounded-full bg-primary-500" />
+                            )}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>

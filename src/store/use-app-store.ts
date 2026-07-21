@@ -2,13 +2,33 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { Vehicle, Profile, AppSettings } from "@/types";
 
+export type CurrencyCode =
+  | "COP" | "USD" | "EUR" | "GBP" | "JPY" | "CAD" | "AUD"
+  | "MXN" | "BRL" | "ARS" | "CLP" | "PEN" | "CNY";
+
+export const currencies: { code: CurrencyCode; label: string; symbol: string; flag: string }[] = [
+  { code: "COP", label: "Peso Colombiano", symbol: "$", flag: "🇨🇴" },
+  { code: "USD", label: "Dólar Estadounidense", symbol: "$", flag: "🇺🇸" },
+  { code: "EUR", label: "Euro", symbol: "€", flag: "🇪🇺" },
+  { code: "GBP", label: "Libra Esterlina", symbol: "£", flag: "🇬🇧" },
+  { code: "MXN", label: "Peso Mexicano", symbol: "$", flag: "🇲🇽" },
+  { code: "BRL", label: "Real Brasileño", symbol: "R$", flag: "🇧🇷" },
+  { code: "ARS", label: "Peso Argentino", symbol: "$", flag: "🇦🇷" },
+  { code: "CLP", label: "Peso Chileno", symbol: "$", flag: "🇨🇱" },
+  { code: "PEN", label: "Sol Peruano", symbol: "S/", flag: "🇵🇪" },
+  { code: "JPY", label: "Yen Japonés", symbol: "¥", flag: "🇯🇵" },
+  { code: "CNY", label: "Yuan Chino", symbol: "¥", flag: "🇨🇳" },
+  { code: "CAD", label: "Dólar Canadiense", symbol: "C$", flag: "🇨🇦" },
+  { code: "AUD", label: "Dólar Australiano", symbol: "A$", flag: "🇦🇺" },
+];
+
 interface AppState {
   profile: Profile | null;
   vehicles: Vehicle[];
   activeVehicleId: string | null;
   settings: AppSettings | null;
   isOnboarded: boolean;
-  selectedCurrency: "USD" | "EUR" | "GBP" | "JPY" | "CAD" | "AUD";
+  selectedCurrency: CurrencyCode;
 
   setProfile: (profile: Profile) => void;
   setVehicles: (vehicles: Vehicle[]) => void;
@@ -16,7 +36,7 @@ interface AppState {
   setActiveVehicle: (id: string) => void;
   setSettings: (settings: AppSettings) => void;
   setOnboarded: (value: boolean) => void;
-  setSelectedCurrency: (currency: "USD" | "EUR" | "GBP" | "JPY" | "CAD" | "AUD") => void;
+  setSelectedCurrency: (currency: CurrencyCode) => void;
   reset: () => void;
 }
 
@@ -26,7 +46,7 @@ const initialState = {
   activeVehicleId: null,
   settings: null,
   isOnboarded: false,
-  selectedCurrency: "USD" as const,
+  selectedCurrency: "COP" as const,
 };
 
 export const useAppStore = create<AppState>()(

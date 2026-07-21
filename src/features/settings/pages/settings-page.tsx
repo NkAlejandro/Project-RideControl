@@ -65,9 +65,6 @@ export default function SettingsPage() {
   const setAppSettings = useAppStore((s) => s.setSettings);
   const activeVehicleId = useAppStore((s) => s.activeVehicleId);
   const setActiveVehicle = useAppStore((s) => s.setActiveVehicle);
-  const selectedCurrency = useAppStore((s) => s.selectedCurrency);
-  const setSelectedCurrency = useAppStore((s) => s.setSelectedCurrency);
-
   const { settings, update: updateSettings } = useSettings();
   const { vehicles: allVehicles, setActive: setActiveV } = useVehicles();
   const { user, logout } = useAuth();
@@ -90,11 +87,6 @@ export default function SettingsPage() {
     setSoundsEnabled(newValue);
     localStorage.setItem("rc_sounds_enabled", newValue ? "true" : "false");
     toast.success(newValue ? "Sonidos activados" : "Sonidos desactivados");
-  };
-
-  const handleCurrencyChange = (currency: "USD" | "EUR" | "GBP" | "JPY" | "CAD" | "AUD") => {
-    setSelectedCurrency(currency);
-    toast.success(`Moneda cambiada a ${currency}`);
   };
 
   const handleNotificationToggle = async () => {
@@ -528,46 +520,7 @@ export default function SettingsPage() {
         </Card>
       </motion.div>
 
-      <motion.div custom={4} variants={sectionVariants} initial="hidden" animate="visible">
-        <Card>
-          <CardHeader>
-            <CardTitle>Moneda</CardTitle>
-          </CardHeader>
-          <div className="grid grid-cols-2 gap-2 p-4">
-            {([
-              { value: "USD", label: "USD", icon: "🇺🇸" },
-              { value: "EUR", label: "EUR", icon: "🇪🇸" },
-              { value: "GBP", label: "GBP", icon: "🇬🇧" },
-              { value: "JPY", label: "JPY", icon: "🇯🇵" },
-              { value: "CAD", label: "CAD", icon: "🇨🇦" },
-              { value: "AUD", label: "AUD", icon: "🇦🇺" },
-            ] as const).map((currency) => {
-              const isActive = selectedCurrency === currency.value;
-              return (
-                <motion.button
-                  key={currency.value}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => handleCurrencyChange(currency.value)}
-                  className={cn(
-                    "flex items-center gap-2 rounded-xl p-3 transition-all",
-                    isActive
-                      ? "border-primary-500 bg-primary-500/10"
-                      : "border-theme-subtle hover:border-theme-medium hover:bg-hover",
-                  )}
-                >
-                  <span className="text-xl">{currency.icon}</span>
-                  <span className="text-sm font-medium text-primary-color">{currency.label}</span>
-                  {isActive && <Check className="h-4 w-4 text-primary-500" />}
-                </motion.button>
-              );
-            })}
-          </div>
-          <p className="px-4 text-xs text-secondary-color">
-            Todas las tasas y valores se mostrarán en la moneda seleccionada en toda la aplicación.
-          </p>
-        </Card>
-      </motion.div>
+
 
       {allVehicles.length > 0 && (
         <motion.div custom={5} variants={sectionVariants} initial="hidden" animate="visible">
