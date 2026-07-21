@@ -25,6 +25,33 @@ function playTone(freq: number, duration: number, type: OscillatorType = "sine",
   osc.stop(c.currentTime + duration);
 }
 
+function randBetween(min: number, max: number) {
+  return min + Math.random() * (max - min);
+}
+
+let lastHoverTime = 0;
+
+function playHover(freqBase: number, durBase: number, vol: number) {
+  const now = performance.now();
+  if (now - lastHoverTime < 60) return;
+  lastHoverTime = now;
+  const freq = freqBase + randBetween(-40, 40);
+  const dur = durBase + randBetween(-0.005, 0.005);
+  playTone(freq, Math.max(0.01, dur), "sine", vol);
+}
+
+export function playHoverTap() {
+  playHover(680, 0.03, 0.025);
+}
+
+export function playHoverNav() {
+  playHover(520, 0.035, 0.02);
+}
+
+export function playHoverCard() {
+  playHover(440, 0.025, 0.015);
+}
+
 export function playSuccess() {
   const c = getCtx();
   if (!c) return;

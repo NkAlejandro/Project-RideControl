@@ -8,6 +8,7 @@ import {
   Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useHoverSound } from "@/lib/use-sounds";
 
 const navItems = [
   { to: "/", icon: LayoutDashboard, label: "Inicio" },
@@ -37,6 +38,7 @@ const itemVariants = {
 };
 
 export function BottomNav() {
+  const { hover } = useHoverSound();
   return (
     <motion.nav
       initial={{ y: 24, opacity: 0 }}
@@ -55,6 +57,7 @@ export function BottomNav() {
             <NavLink
               to={item.to}
               end={item.to === "/"}
+              onMouseEnter={() => hover("nav")}
               className={({ isActive }) =>
                 cn(
                   "press-effect flex flex-col items-center gap-1 rounded-xl px-3 py-2 min-h-[44px] text-[11px] font-medium transition-all duration-200",

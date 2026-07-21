@@ -1,5 +1,6 @@
 import { type ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { useHoverSound } from "@/lib/use-sounds";
 
 interface CardProps {
   children: ReactNode;
@@ -9,8 +10,10 @@ interface CardProps {
 }
 
 export function Card({ children, className, padding = "md", hover = false }: CardProps) {
+  const { hover: sound } = useHoverSound();
   return (
     <div
+      onMouseEnter={hover ? () => sound("card") : undefined}
       className={cn(
         "overflow-hidden rounded-3xl border border-theme-subtle bg-card card-interactive hover-lift animate-fade-in",
         hover && "cursor-pointer hover:shadow-lg hover:shadow-black/20",

@@ -7,6 +7,7 @@ import { useNotifications } from "@/hooks/use-notifications";
 import { useSettings } from "@/hooks/use-settings";
 import { useAppStore } from "@/store/use-app-store";
 import { cn } from "@/lib/utils";
+import { useHoverSound } from "@/lib/use-sounds";
 
 const iconMap = {
   maintenance: Wrench,
@@ -29,6 +30,7 @@ interface HeaderProps {
 }
 
 export function Header({ onMenuToggle }: HeaderProps) {
+  const { hover } = useHoverSound();
   const { user, logout } = useAuth();
   const { notifications, count } = useNotifications();
   const { settings, update: updateSettings } = useSettings();
@@ -83,6 +85,7 @@ export function Header({ onMenuToggle }: HeaderProps) {
     >
       <button
         onClick={onMenuToggle}
+        onMouseEnter={() => hover("tap")}
         className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-secondary-color transition-all duration-200 hover:bg-hover hover:text-primary-color active:scale-95 lg:hidden"
       >
         <Menu className="h-5 w-5" />
@@ -105,6 +108,7 @@ export function Header({ onMenuToggle }: HeaderProps) {
           <motion.button
             whileHover={{ scale: 1.08 }}
             whileTap={{ scale: 0.92 }}
+            onMouseEnter={() => hover("tap")}
             onClick={() => { setOpen(!open); setUserMenuOpen(false); }}
             className={cn(
               "min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl transition-colors",
@@ -171,6 +175,7 @@ export function Header({ onMenuToggle }: HeaderProps) {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
+            onMouseEnter={() => hover("tap")}
             onClick={() => { setUserMenuOpen(!userMenuOpen); setOpen(false); }}
             className={cn(
               "flex items-center gap-2 rounded-xl py-1.5 pl-1.5 pr-2 transition-colors",
@@ -211,6 +216,7 @@ export function Header({ onMenuToggle }: HeaderProps) {
                 {/* Menu Items */}
                 <div className="py-1.5">
                   <button
+                    onMouseEnter={() => hover("tap")}
                     onClick={() => { navigate("/settings"); closeAll(); }}
                     className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-secondary-color transition-colors hover:bg-hover hover:text-primary-color"
                   >
@@ -218,6 +224,7 @@ export function Header({ onMenuToggle }: HeaderProps) {
                     Configuración
                   </button>
                   <button
+                    onMouseEnter={() => hover("tap")}
                     onClick={handleThemeToggle}
                     className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-secondary-color transition-colors hover:bg-hover hover:text-primary-color"
                   >
@@ -233,6 +240,7 @@ export function Header({ onMenuToggle }: HeaderProps) {
                 {/* Account */}
                 <div className="border-t border-theme-subtle py-1.5">
                   <button
+                    onMouseEnter={() => hover("tap")}
                     onClick={() => { logout(); closeAll(); }}
                     className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-secondary-color transition-colors hover:bg-hover hover:text-primary-color"
                   >
@@ -240,6 +248,7 @@ export function Header({ onMenuToggle }: HeaderProps) {
                     Cambiar de cuenta
                   </button>
                   <button
+                    onMouseEnter={() => hover("tap")}
                     onClick={() => { logout(); closeAll(); }}
                     className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-danger-500 transition-colors hover:bg-danger-500/10"
                   >

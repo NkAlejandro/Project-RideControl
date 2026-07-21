@@ -16,6 +16,7 @@ import {
   LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useHoverSound } from "@/lib/use-sounds";
 
 const navItems = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
@@ -56,6 +57,7 @@ interface SidebarProps {
 }
 
 function SidebarContent({ onClose }: { onClose?: () => void }) {
+  const { hover } = useHoverSound();
   return (
     <div className="flex h-full flex-col border-r border-theme-subtle bg-surface">
       <div className="flex h-14 items-center justify-between px-4 lg:h-16 lg:px-5">
@@ -87,6 +89,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
               to={item.to}
               end={item.to === "/"}
               onClick={onClose}
+              onMouseEnter={() => hover("nav")}
               className={({ isActive }) =>
                 cn(
                   "group flex items-center gap-3 rounded-xl px-3 py-2.5 min-h-[44px] text-sm font-medium transition-all duration-200",

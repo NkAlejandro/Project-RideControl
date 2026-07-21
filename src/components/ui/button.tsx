@@ -1,6 +1,7 @@
 import { type ReactNode } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
+import { useHoverSound } from "@/lib/use-sounds";
 
 const buttonVariants = cva(
   "btn-ripple hover-scale press-effect inline-flex items-center justify-center gap-2 rounded-full font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed",
@@ -49,10 +50,12 @@ export function Button({
   disabled,
   ...props
 }: ButtonProps) {
+  const { hover } = useHoverSound();
   return (
     <button
       className={cn(buttonVariants({ variant, size, className }))}
       disabled={disabled || loading}
+      onMouseEnter={() => hover("tap")}
       {...props}
     >
       {loading && (
