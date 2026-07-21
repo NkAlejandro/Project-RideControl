@@ -26,6 +26,7 @@ import { useFuel } from "@/hooks/use-fuel";
 import { useVehicles } from "@/hooks/use-vehicles";
 import { fuelRepository } from "@/database/repositories/fuel-repository";
 import { cn, formatCurrency, formatNumber } from "@/lib/utils";
+import { playCoin, playDelete } from "@/lib/sounds";
 import type { FuelRecord } from "@/types";
 
 function CountUp({
@@ -167,7 +168,7 @@ export default function FuelPage() {
           <h1 className="text-2xl font-bold text-primary-color">Combustible</h1>
           <p className="text-sm text-secondary-color">Historial y consumo</p>
         </div>
-        <motion.div whileTap={{ scale: 0.95 }}>
+        <motion.div whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.03 }}>
           <Button size="sm" className="btn-ripple press-effect" onClick={() => setSheetOpen(true)}>
             <Plus className="h-4 w-4" />
             Registrar
@@ -181,6 +182,7 @@ export default function FuelPage() {
           initial="hidden"
           animate="visible"
           custom={0}
+          whileHover={{ scale: 1.01, transition: { type: "spring", stiffness: 300, damping: 20 } }}
         >
           <Card className="card-interactive hover-lift">
             <CardHeader>
@@ -204,6 +206,7 @@ export default function FuelPage() {
           initial="hidden"
           animate="visible"
           custom={1}
+          whileHover={{ scale: 1.01, transition: { type: "spring", stiffness: 300, damping: 20 } }}
         >
           <Card className="card-interactive hover-lift">
             <CardHeader>
@@ -286,6 +289,7 @@ export default function FuelPage() {
                   initial="hidden"
                   animate="visible"
                   exit="exit"
+                  whileHover={{ scale: 1.01, transition: { type: "spring", stiffness: 300, damping: 20 } }}
                 >
                   <Card className="card-interactive hover-lift">
                     <div className="flex items-start justify-between">
@@ -362,6 +366,7 @@ export default function FuelPage() {
           });
           await reload();
           setSheetOpen(false);
+          try { playCoin(); } catch {}
           toast.success("Tanqueo registrado");
         }}
       />
@@ -406,6 +411,7 @@ export default function FuelPage() {
                       if (deletingRecord) {
                         await fuelRepository.delete(deletingRecord.id);
                         await reload();
+                        try { playDelete(); } catch {}
                         toast.success("Registro eliminado");
                       }
                       setDeletingRecord(null);

@@ -19,6 +19,8 @@ import {
   LogOut,
   Cloud,
   CloudOff,
+  Bell,
+  BellOff,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
@@ -63,6 +65,8 @@ export default function SettingsPage() {
   const setAppSettings = useAppStore((s) => s.setSettings);
   const activeVehicleId = useAppStore((s) => s.activeVehicleId);
   const setActiveVehicle = useAppStore((s) => s.setActiveVehicle);
+  const selectedCurrency = useAppStore((s) => s.selectedCurrency);
+  const setSelectedCurrency = useAppStore((s) => s.setSelectedCurrency);
 
   const { settings, update: updateSettings } = useSettings();
   const { vehicles: allVehicles, setActive: setActiveV } = useVehicles();
@@ -74,6 +78,54 @@ export default function SettingsPage() {
   const [selectedTheme, setSelectedTheme] = useState<"light" | "dark" | "system">(
     () => settings?.theme ?? appSettings?.theme ?? "dark",
   );
+  const [notificationsEnabled, setNotificationsEnabled] = useState(
+    () => localStorage.getItem("rc_notifications_enabled") === "true",
+  );
+  const [soundsEnabled, setSoundsEnabled] = useState(
+    () => localStorage.getItem("rc_sounds_enabled") !== "false",
+  );
+
+  const handleSoundToggle = () => {
+    const newValue = !soundsEnabled;
+    setSoundsEnabled(newValue);
+    localStorage.setItem("rc_sounds_enabled", newValue ? "true" : "false");
+    toast.success(newValue ? "Sonidos activados" : "Sonidos desactivados");
+  };
+
+  const handleCurrencyChange = (currency: "USD" | "EUR" | "GBP" | "JPY" | "CAD" | "AUD") => {
+    setSelectedCurrency(currency);
+    toast.success(`Moneda cambiada a ${currency}`);
+  };
+
+  const handleNotificationToggle = async () => {
+    const newValue = !notificationsEnabled;
+    if (newValue) {
+      if (!("Notification" in window)) {
+        toast.error("Tu navegador no soporta notificaciones");
+        return;
+      }
+      if (Notification.permission === "denied") {
+        toast.error("Bloqueaste las notificaciones. Cambialo desde la configuración del navegador");
+        return;
+      }
+      if (Notification.permission === "default") {
+        const result = await Notification.requestPermission();
+        if (result !== "granted") {
+          toast.error("Permiso denegado");
+          return;
+        }
+      }
+      setNotificationsEnabled(true);
+      localStorage.setItem("rc_notifications_enabled", "true");
+      window.dispatchEvent(new CustomEvent("rc:notifications-toggle", { detail: { enabled: true } }));
+      toast.success("Notificaciones activadas");
+    } else {
+      setNotificationsEnabled(false);
+      localStorage.setItem("rc_notifications_enabled", "false");
+      window.dispatchEvent(new CustomEvent("rc:notifications-toggle", { detail: { enabled: false } }));
+      toast.success("Notificaciones desactivadas");
+    }
+  };
 
   const {
     register,
@@ -378,8 +430,147 @@ export default function SettingsPage() {
         </motion.div>
       )}
 
+      <motion.div custom={3} variants={sectionVariants} initial="hidden" animate="visible">
+        <Card>
+          <CardHeader>
+            <CardTitle>Notificaciones</CardTitle>
+          </CardHeader>
+          <div className="flex items-center gap-4">
+            <div className={cn(
+              "flex h-12 w-12 items-center justify-center rounded-xl transition-colors",
+              notificationsEnabled ? "bg-primary-500/10" : "bg-hover",
+            )}>
+              {notificationsEnabled
+                ? <Bell className="h-5 w-5 text-primary-500" />
+                : <BellOff className="h-5 w-5 text-secondary-color" />
+              }
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-primary-color">
+                {notificationsEnabled ? "Activadas" : "Desactivadas"}
+              </p>
+              <p className="text-xs text-secondary-color">
+                {notificationsEnabled
+                  ? "Recibirás alertas de mantenimiento, metas y cierre diario"
+                  : "Actívalas para recibir recordatorios importantes"
+                }
+              </p>
+            </div>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={handleNotificationToggle}
+              className={cn(
+                "relative h-7 w-12 rounded-full transition-colors",
+                notificationsEnabled
+                  ? "bg-primary-500"
+                  : "bg-white/[0.1]",
+              )}
+            >
+              <motion.div
+                animate={{ x: notificationsEnabled ? 20 : 2 }}
+                transition={{ type: "spring", stiffness: 500, damping: 25 }}
+                className="absolute top-0.5 left-0.5 h-6 w-6 rounded-full bg-white shadow-md"
+              />
+            </motion.button>
+          </div>
+          <p className="mt-3 text-xs text-secondary-color">
+            Las notificaciones aparecerán incluso cuando la aplicación esté cerrada.
+            {notificationsEnabled && " Gestiona tus preferencias desde la configuración de tu navegador."}
+          </p>
+        </Card>
+      </motion.div>
+
+      <motion.div custom={4} variants={sectionVariants} initial="hidden" animate="visible">
+        <Card>
+          <CardHeader>
+            <CardTitle>Sonidos</CardTitle>
+          </CardHeader>
+          <div className="flex items-center gap-4">
+            <div className={cn(
+              "flex h-12 w-12 items-center justify-center rounded-xl transition-colors",
+              soundsEnabled ? "bg-primary-500/10" : "bg-hover",
+            )}>
+              <span className="text-lg">{soundsEnabled ? "🔊" : "🔇"}</span>
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-primary-color">
+                {soundsEnabled ? "Activados" : "Desactivados"}
+              </p>
+              <p className="text-xs text-secondary-color">
+                {soundsEnabled
+                  ? "Escucharás sonidos al registrar gasolina, completar metas y más"
+                  : "Actívalos para una experiencia más inmersiva"
+                }
+              </p>
+            </div>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={handleSoundToggle}
+              className={cn(
+                "relative h-7 w-12 rounded-full transition-colors",
+                soundsEnabled
+                  ? "bg-primary-500"
+                  : "bg-white/[0.1]",
+              )}
+            >
+              <motion.div
+                animate={{ x: soundsEnabled ? 20 : 2 }}
+                transition={{ type: "spring", stiffness: 500, damping: 25 }}
+                className="absolute top-0.5 left-0.5 h-6 w-6 rounded-full bg-white shadow-md"
+              />
+            </motion.button>
+          </div>
+          <p className="mt-3 text-xs text-secondary-color">
+            Sonidos breves al realizar acciones importantes como registrar gastos o completar objetivos.
+          </p>
+        </Card>
+      </motion.div>
+
+      <motion.div custom={4} variants={sectionVariants} initial="hidden" animate="visible">
+        <Card>
+          <CardHeader>
+            <CardTitle>Moneda</CardTitle>
+          </CardHeader>
+          <div className="grid grid-cols-2 gap-2 p-4">
+            {([
+              { value: "USD", label: "USD", icon: "🇺🇸" },
+              { value: "EUR", label: "EUR", icon: "🇪🇸" },
+              { value: "GBP", label: "GBP", icon: "🇬🇧" },
+              { value: "JPY", label: "JPY", icon: "🇯🇵" },
+              { value: "CAD", label: "CAD", icon: "🇨🇦" },
+              { value: "AUD", label: "AUD", icon: "🇦🇺" },
+            ] as const).map((currency) => {
+              const isActive = selectedCurrency === currency.value;
+              return (
+                <motion.button
+                  key={currency.value}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => handleCurrencyChange(currency.value)}
+                  className={cn(
+                    "flex items-center gap-2 rounded-xl p-3 transition-all",
+                    isActive
+                      ? "border-primary-500 bg-primary-500/10"
+                      : "border-theme-subtle hover:border-theme-medium hover:bg-hover",
+                  )}
+                >
+                  <span className="text-xl">{currency.icon}</span>
+                  <span className="text-sm font-medium text-primary-color">{currency.label}</span>
+                  {isActive && <Check className="h-4 w-4 text-primary-500" />}
+                </motion.button>
+              );
+            })}
+          </div>
+          <p className="px-4 text-xs text-secondary-color">
+            Todas las tasas y valores se mostrarán en la moneda seleccionada en toda la aplicación.
+          </p>
+        </Card>
+      </motion.div>
+
       {allVehicles.length > 0 && (
-        <motion.div custom={3} variants={sectionVariants} initial="hidden" animate="visible">
+        <motion.div custom={5} variants={sectionVariants} initial="hidden" animate="visible">
           <Card>
             <CardHeader>
               <CardTitle>Vehículo activo</CardTitle>
@@ -439,7 +630,7 @@ export default function SettingsPage() {
         </motion.div>
       )}
 
-      <motion.div custom={4} variants={sectionVariants} initial="hidden" animate="visible">
+      <motion.div custom={6} variants={sectionVariants} initial="hidden" animate="visible">
         <Card>
           <CardHeader>
             <CardTitle>Datos</CardTitle>
@@ -496,7 +687,7 @@ export default function SettingsPage() {
         </Card>
       </motion.div>
 
-      <motion.div custom={5} variants={sectionVariants} initial="hidden" animate="visible">
+      <motion.div custom={7} variants={sectionVariants} initial="hidden" animate="visible">
         <Card>
           <CardHeader>
             <CardTitle>Acerca de</CardTitle>

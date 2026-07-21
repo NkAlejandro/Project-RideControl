@@ -11,12 +11,11 @@ export default defineConfig({
     VitePWA({
       registerType: "autoUpdate",
       devOptions: { enabled: false },
-      workbox: {
-        globPatterns: ["**/*.{js,css,html,svg,woff2}"],
-        navigateFallback: "index.html",
-        cleanupOutdatedCaches: true,
-        skipWaiting: true,
-        clientsClaim: true,
+      strategies: "injectManifest",
+      srcDir: "src",
+      filename: "sw.js",
+      injectManifest: {
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
       },
       manifest: {
         name: "RideControl",

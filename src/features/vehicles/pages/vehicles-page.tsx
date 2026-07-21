@@ -14,6 +14,7 @@ import { Modal } from "@/components/ui/modal";
 import { vehicleSchema, type VehicleFormData } from "@/lib/schemas";
 import { useVehicles } from "@/hooks/use-vehicles";
 import { cn, formatNumber } from "@/lib/utils";
+import { playSuccess, playDelete } from "@/lib/sounds";
 import type { Vehicle } from "@/types";
 
 const VEHICLE_TYPES = [
@@ -91,8 +92,8 @@ function TiltCard({ children, className }: { children: React.ReactNode; classNam
   const ref = useRef<HTMLDivElement>(null);
   const rawX = useMotionValue(0);
   const rawY = useMotionValue(0);
-  const smoothX = useSpring(rawX, { stiffness: 250, damping: 20 });
-  const smoothY = useSpring(rawY, { stiffness: 250, damping: 20 });
+  const smoothX = useSpring(rawX, { stiffness: 200, damping: 18 });
+  const smoothY = useSpring(rawY, { stiffness: 200, damping: 18 });
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     const rect = ref.current?.getBoundingClientRect();
@@ -102,8 +103,8 @@ function TiltCard({ children, className }: { children: React.ReactNode; classNam
     const py = ((e.clientY - rect.top) / rect.height) * 100;
     (el as HTMLElement).style.setProperty("--shine-x", `${px}%`);
     (el as HTMLElement).style.setProperty("--shine-y", `${py}%`);
-    rawX.set(((e.clientY - rect.top) / rect.height - 0.5) * -8);
-    rawY.set(((e.clientX - rect.left) / rect.width - 0.5) * 8);
+    rawX.set(((e.clientY - rect.top) / rect.height - 0.5) * -6);
+    rawY.set(((e.clientX - rect.left) / rect.width - 0.5) * 6);
   }, [rawX, rawY]);
 
   const handleMouseLeave = useCallback((e: React.MouseEvent) => {
@@ -117,11 +118,11 @@ function TiltCard({ children, className }: { children: React.ReactNode; classNam
       ref={ref}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      style={{ perspective: 800, transformStyle: "preserve-3d" } as React.CSSProperties}
+      style={{ perspective: 800 } as React.CSSProperties}
       className={className}
     >
       <motion.div
-        style={{ rotateX: smoothX, rotateY: smoothY, transformStyle: "preserve-3d" } as React.CSSProperties}
+        style={{ rotateX: smoothX, rotateY: smoothY } as React.CSSProperties}
       >
         {children}
       </motion.div>
@@ -186,19 +187,19 @@ function VehicleCard({
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, y: 40, scale: 0.92 }}
+      initial={{ opacity: 0, y: 20, scale: 0.96 }}
       animate={{
         opacity: 1, y: 0, scale: 1,
         boxShadow: justCreated ? [
           "0 0 0px rgba(255,255,255,0)",
-          "0 0 40px rgba(255,255,255,0.08)",
+          "0 0 24px rgba(255,255,255,0.05)",
           "0 0 0px rgba(255,255,255,0)",
         ] : undefined,
       }}
-      exit={{ opacity: 0, scale: 0.8, y: -30 }}
+      exit={{ opacity: 0, scale: 0.85, y: -20 }}
       transition={{
-        type: "spring", stiffness: 280, damping: 22, mass: 0.7,
-        delay: index * 0.06,
+        type: "spring", stiffness: 240, damping: 24, mass: 0.8,
+        delay: index * 0.05,
       }}
     >
       <TiltCard>
@@ -223,10 +224,10 @@ function VehicleCard({
             <>
               <motion.div
                 layoutId="activeIndicator"
-                className="absolute left-0 top-2 h-[calc(100%-16px)] w-[2.5px] rounded-full z-[3]"
+                className="absolute left-0 top-2 h-[calc(100%-16px)] w-[2px] rounded-full z-[3]"
                 style={{
-                  background: "linear-gradient(180deg, rgba(255,255,255,0.8), rgba(255,255,255,0.3))",
-                  boxShadow: "0 0 12px rgba(255,255,255,0.3)",
+                  background: "linear-gradient(180deg, rgba(255,255,255,0.6), rgba(255,255,255,0.2))",
+                  boxShadow: "0 0 8px rgba(255,255,255,0.15)",
                 }}
                 initial={{ opacity: 0, scaleY: 0 }}
                 animate={{ opacity: 1, scaleY: 1 }}
@@ -237,12 +238,12 @@ function VehicleCard({
                 className="absolute inset-0 pointer-events-none rounded-2xl z-[1]"
                 animate={{
                   boxShadow: [
-                    "inset 0 0 20px rgba(255,255,255,0.02)",
-                    "inset 0 0 60px rgba(255,255,255,0.05)",
-                    "inset 0 0 20px rgba(255,255,255,0.02)",
+                    "inset 0 0 20px rgba(255,255,255,0.015)",
+                    "inset 0 0 40px rgba(255,255,255,0.03)",
+                    "inset 0 0 20px rgba(255,255,255,0.015)",
                   ],
                 }}
-                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
               />
             </>
           )}
@@ -379,8 +380,8 @@ function VehicleCard({
                     ? "bg-white/[0.12] text-white/80"
                     : "bg-white/[0.04] text-white/40",
                 )}
-                animate={isActive ? { scale: [1, 1.06, 1], opacity: [0.8, 1, 0.8] } : {}}
-                transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+                animate={isActive ? { scale: [1, 1.03, 1], opacity: [0.85, 1, 0.85] } : {}}
+                transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
               >
                 {isActive ? "● Activo" : "Inactivo"}
               </motion.span>
@@ -896,6 +897,7 @@ export default function VehiclesPage() {
               profileId: profileId(),
               isActive: vehicles.length === 0,
             });
+            try { playSuccess(); } catch {}
             toast.success("Vehículo creado", {
               icon: <Sparkles className="h-4 w-4 text-white" />,
             });
@@ -940,6 +942,7 @@ export default function VehiclesPage() {
                       setTimeout(() => setDeleteShake(false), 400);
                       if (deletingVehicle) {
                         await remove(deletingVehicle.id);
+                        try { playDelete(); } catch {}
                         toast.success("Vehículo eliminado");
                       }
                       setDeletingVehicle(null);

@@ -24,6 +24,7 @@ import { goalSchema, type GoalFormData } from "@/lib/schemas";
 import { useGoals } from "@/hooks/use-goals";
 import { useAppStore } from "@/store/use-app-store";
 import { cn, formatCurrency } from "@/lib/utils";
+import { playSuccess, playCoin, playDelete, playGoalComplete } from "@/lib/sounds";
 
 function AnimatedNumber({ value, duration = 1 }: { value: number; duration?: number }) {
   const [display, setDisplay] = useState(0);
@@ -115,6 +116,7 @@ export default function GoalsPage() {
         deadline: data.deadline,
         isCompleted: false,
       });
+      try { playSuccess(); } catch {}
       toast.success("Objetivo creado");
       setModalOpen(false);
       reset();
@@ -135,10 +137,12 @@ export default function GoalsPage() {
       await addToGoal(goalId, amount);
       const goal = goals.find((g) => g.id === goalId);
       if (goal && goal.currentAmount + amount >= goal.targetAmount) {
+        try { playGoalComplete(); } catch {}
         toast.success("¡Objetivo completado!", {
           description: `${goal.title} ha sido alcanzado`,
         });
       } else {
+        try { playCoin(); } catch {}
         toast.success("Dinero agregado", {
           description: `${formatCurrency(amount)} agregado`,
         });
@@ -153,6 +157,7 @@ export default function GoalsPage() {
   const handleDelete = async (goalId: string, title: string) => {
     try {
       await remove(goalId);
+      try { playDelete(); } catch {}
       toast.success(`"${title}" eliminado`);
     } catch {
       toast.error("Error al eliminar");
@@ -217,6 +222,7 @@ export default function GoalsPage() {
                 damping: 18,
                 delay: idx * 0.08,
               }}
+              whileHover={{ scale: 1.01, transition: { type: "spring", stiffness: 300, damping: 20 } }}
             >
               <Card padding="sm" className="text-center hover-lift">
                 <p className={cn("text-2xl font-bold", item.cls)}>{item.val}</p>
@@ -253,6 +259,7 @@ export default function GoalsPage() {
                     stiffness: 200,
                     damping: 18,
                   }}
+                  whileHover={{ scale: 1.01, transition: { type: "spring", stiffness: 300, damping: 20 } }}
                 >
                   <Card
                     padding="md"
@@ -303,12 +310,13 @@ export default function GoalsPage() {
                         </div>
                       </div>
                       {!goal.isCompleted && (
-                        <button
+                        <motion.button
+                          whileHover={{ scale: 1.03 }}
                           onClick={() => handleDelete(goal.id, goal.title)}
                           className="rounded-xl p-1.5 text-muted-color transition-colors hover:bg-danger-500/10 hover:text-danger-400"
                         >
                           <Trash2 className="h-4 w-4" />
-                        </button>
+                        </motion.button>
                       )}
                     </div>
 
@@ -392,7 +400,7 @@ export default function GoalsPage() {
 
                     {!goal.isCompleted && (
                       <div className="mt-3 flex gap-2">
-                        <motion.div className="flex-1" whileTap={{ scale: 0.95 }}>
+                        <motion.div className="flex-1" whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.03 }}>
                           <Button
                             size="sm"
                             variant="secondary"

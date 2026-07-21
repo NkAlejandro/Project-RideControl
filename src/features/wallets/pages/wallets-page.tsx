@@ -15,6 +15,7 @@ import { Modal } from "@/components/ui/modal";
 import { useWallets } from "@/hooks/use-wallets";
 import { cn, formatCurrency } from "@/lib/utils";
 import { walletRepository } from "@/database/repositories/wallet-repository";
+import { playSuccess } from "@/lib/sounds";
 
 const WALLET_ICONS: Record<string, React.ReactNode> = {
   vehicle: <Wallet className="h-5 w-5" />,
@@ -117,6 +118,7 @@ export default function WalletsPage() {
         });
       }
       await reload();
+      try { playSuccess(); } catch {}
       toast.success("Distribución actualizada");
       setModalOpen(false);
     } catch {

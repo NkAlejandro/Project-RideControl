@@ -1,8 +1,11 @@
+import { useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider, useAuth } from "@/components/auth-provider";
 import { SyncProvider } from "@/components/sync-provider";
+import { tryRegisterFCM, tryUnregisterFCM } from "@/lib/firebase-messaging";
 import { AppLayout } from "@/layout/app-layout";
 import LoginPage from "@/features/auth/pages/login-page";
 import DashboardPage from "@/features/dashboard/pages/dashboard-page";
@@ -105,6 +108,31 @@ function AnimatedRoutes() {
 
 function AppContent() {
   const { user, loading } = useAuth();
+
+  useEffect(() => {
+    if (!user) return;
+    const handleFCM = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.enabled) {
+        tryRegisterFCM(user.uid);
+      } else {
+        tryUnregisterFCM(user.uid);
+      }
+    };
+    const handleMessage = (e: Event) => {
+      const payload = (e as CustomEvent).detail;
+      const n = payload?.notification;
+      if (n?.title) {
+        toast(n.title, { description: n.body, duration: 4000 });
+      }
+    };
+    window.addEventListener("rc:notifications-toggle", handleFCM);
+    window.addEventListener("rc:fcm-message", handleMessage);
+    return () => {
+      window.removeEventListener("rc:notifications-toggle", handleFCM);
+      window.removeEventListener("rc:fcm-message", handleMessage);
+    };
+  }, [user]);
 
   if (loading) {
     return (

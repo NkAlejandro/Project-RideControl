@@ -216,6 +216,7 @@ function SummaryCard({ icon, title, value, color, trend, index }: { icon: React.
         stiffness: 200,
         damping: 18,
       }}
+      whileHover={{ scale: 1.01, transition: { type: "spring", stiffness: 300, damping: 20 } }}
     >
       <Card className="card-interactive hover-lift">
         <div className="flex items-start justify-between">
@@ -252,6 +253,7 @@ function AnimatedChartCard({ children, delay = 0 }: { children: React.ReactNode;
       initial="hidden"
       animate="visible"
       transition={{ delay }}
+      whileHover={{ scale: 1.01, transition: { type: "spring", stiffness: 300, damping: 20 } }}
     >
       {children}
     </motion.div>

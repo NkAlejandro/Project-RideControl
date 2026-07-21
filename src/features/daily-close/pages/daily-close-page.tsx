@@ -26,6 +26,7 @@ import { useAppStore } from "@/store/use-app-store";
 import { vehicleRepository } from "@/database/repositories/vehicle-repository";
 import { walletRepository } from "@/database/repositories/wallet-repository";
 import { cn, formatCurrency, formatNumber } from "@/lib/utils";
+import { playCoin } from "@/lib/sounds";
 import { useEffect } from "react";
 
 const APPS = ["Uber", "DiDi", "InDrive", "Rappi", "Otro"];
@@ -170,6 +171,7 @@ export default function DailyClosePage() {
         netProfit: net,
       });
 
+      try { playCoin(); } catch {}
       toast.success("Cierre del día guardado", {
         description: `Ganancia neta: ${formatCurrency(net)}`,
       });
@@ -247,6 +249,7 @@ export default function DailyClosePage() {
         variants={vehicleSlide}
         initial="hidden"
         animate="show"
+        whileHover={{ scale: 1.01, transition: { type: "spring", stiffness: 300, damping: 20 } }}
       >
         <Card padding="sm">
           <p className="px-1 text-xs text-secondary-color">
@@ -271,6 +274,7 @@ export default function DailyClosePage() {
               variants={summaryStagger}
               initial="hidden"
               animate="show"
+              whileHover={{ scale: 1.01, transition: { type: "spring", stiffness: 300, damping: 20 } }}
             >
               <Card className="border-primary-500/20">
                 <motion.div
@@ -361,15 +365,17 @@ export default function DailyClosePage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
             >
-              <Button
-                variant="secondary"
-                className="w-full"
-                size="lg"
-                onClick={handleReset}
-              >
-                <RotateCcw className="h-4 w-4" />
-                Nuevo cierre
-              </Button>
+              <motion.div whileHover={{ scale: 1.03 }}>
+                <Button
+                  variant="secondary"
+                  className="w-full"
+                  size="lg"
+                  onClick={handleReset}
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  Nuevo cierre
+                </Button>
+              </motion.div>
             </motion.div>
           </motion.div>
         ) : (
@@ -491,6 +497,7 @@ export default function DailyClosePage() {
                               animate={{ opacity: 1, scale: 1 }}
                               transition={{ delay: 0.4 + i * 0.05, type: "spring" as const, stiffness: 300, damping: 24 }}
                               whileTap={{ scale: 0.92 }}
+                              whileHover={{ scale: 1.03 }}
                               onClick={() =>
                                 handleAppToggle(app, field.value, field.onChange)
                               }

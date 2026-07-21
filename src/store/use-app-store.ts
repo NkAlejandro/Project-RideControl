@@ -8,6 +8,7 @@ interface AppState {
   activeVehicleId: string | null;
   settings: AppSettings | null;
   isOnboarded: boolean;
+  selectedCurrency: "USD" | "EUR" | "GBP" | "JPY" | "CAD" | "AUD";
 
   setProfile: (profile: Profile) => void;
   setVehicles: (vehicles: Vehicle[]) => void;
@@ -15,6 +16,7 @@ interface AppState {
   setActiveVehicle: (id: string) => void;
   setSettings: (settings: AppSettings) => void;
   setOnboarded: (value: boolean) => void;
+  setSelectedCurrency: (currency: "USD" | "EUR" | "GBP" | "JPY" | "CAD" | "AUD") => void;
   reset: () => void;
 }
 
@@ -24,6 +26,7 @@ const initialState = {
   activeVehicleId: null,
   settings: null,
   isOnboarded: false,
+  selectedCurrency: "USD" as const,
 };
 
 export const useAppStore = create<AppState>()(
@@ -44,6 +47,8 @@ export const useAppStore = create<AppState>()(
 
       setOnboarded: (value) => set({ isOnboarded: value }),
 
+      setSelectedCurrency: (currency) => set({ selectedCurrency: currency }),
+
       reset: () => set(initialState),
     }),
     {
@@ -54,6 +59,7 @@ export const useAppStore = create<AppState>()(
         activeVehicleId: state.activeVehicleId,
         settings: state.settings,
         isOnboarded: state.isOnboarded,
+        selectedCurrency: state.selectedCurrency,
       }),
     },
   ),

@@ -21,6 +21,7 @@ import { maintenanceSchema, type MaintenanceFormData } from "@/lib/schemas";
 import { useMaintenance } from "@/hooks/use-maintenance";
 import { useVehicles } from "@/hooks/use-vehicles";
 import { cn, formatCurrency } from "@/lib/utils";
+import { playSuccess, playDelete } from "@/lib/sounds";
 import type { MaintenanceType } from "@/types";
 
 const MAINTENANCE_TYPES: Record<
@@ -231,6 +232,7 @@ export default function MaintenancePage() {
         cost: data.cost,
         notes: data.notes,
       });
+      try { playSuccess(); } catch {}
       toast.success("Mantenimiento registrado");
       setModalOpen(false);
       reset();
@@ -247,6 +249,7 @@ export default function MaintenancePage() {
         lastKm: activeVehicle?.mileage ?? 0,
         lastDate: new Date(),
       });
+      try { playSuccess(); } catch {}
       toast.success(`${item.info.name} marcado como realizado`);
     } catch {
       toast.error("Error al actualizar");
@@ -256,6 +259,7 @@ export default function MaintenancePage() {
   const handleDelete = async (item: ComputedItem) => {
     try {
       await remove(item.id);
+      try { playDelete(); } catch {}
       toast.success(`${item.info.name} eliminado`);
     } catch {
       toast.error("Error al eliminar");
@@ -327,6 +331,7 @@ export default function MaintenancePage() {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
+        whileHover={{ scale: 1.01, transition: { type: "spring", stiffness: 300, damping: 20 } }}
       >
         <Card padding="sm">
           <div className="flex items-center justify-between">
@@ -432,6 +437,7 @@ export default function MaintenancePage() {
                 initial="hidden"
                 animate="visible"
                 exit="exit"
+                whileHover={{ scale: 1.01, transition: { type: "spring", stiffness: 300, damping: 20 } }}
               >
                 <Card
                   padding="sm"
@@ -513,6 +519,7 @@ export default function MaintenancePage() {
                   <div className="mt-2 flex gap-1">
                     <motion.button
                       whileTap={{ scale: 0.9 }}
+                      whileHover={{ scale: 1.03 }}
                       onClick={() => handleMarkDone(item)}
                       className="flex-1 rounded-xl bg-success-500/10 px-2 py-1.5 text-[10px] font-medium text-success-400 transition-colors hover:bg-success-500/20"
                     >
@@ -520,6 +527,7 @@ export default function MaintenancePage() {
                     </motion.button>
                     <motion.button
                       whileTap={{ scale: 0.9 }}
+                      whileHover={{ scale: 1.03 }}
                       onClick={() => handleDelete(item)}
                       className="rounded-xl bg-danger-500/10 px-2 py-1.5 text-[10px] font-medium text-danger-400 transition-colors hover:bg-danger-500/20"
                     >
@@ -578,6 +586,7 @@ export default function MaintenancePage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.025 }}
                 whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: 1.03 }}
                 onClick={() => handleOpenModal(type)}
                 className={cn(
                   "icon-bounce flex flex-col items-center rounded-3xl border border-theme-subtle bg-card p-4 transition-all duration-200",

@@ -1,10 +1,12 @@
 import { initializeApp, type FirebaseApp } from "firebase/app";
 import { getDatabase, type Database } from "firebase/database";
 import { getAuth, type Auth } from "firebase/auth";
+import { getMessaging, type Messaging } from "firebase/messaging";
 
 let app: FirebaseApp | null = null;
 let database: Database | null = null;
 let auth: Auth | null = null;
+let messaging: Messaging | null = null;
 
 export function getFirebaseApp(): FirebaseApp | null {
   if (app) return app;
@@ -37,4 +39,16 @@ export function getFirebaseAuth(): Auth | null {
   if (!a) return null;
   auth = getAuth(a);
   return auth;
+}
+
+export function getFirebaseMessaging(): Messaging | null {
+  if (messaging) return messaging;
+  const a = getFirebaseApp();
+  if (!a) return null;
+  messaging = getMessaging(a);
+  return messaging;
+}
+
+export function getVapidKey(): string | null {
+  return import.meta.env.VITE_FIREBASE_VAPID_KEY || null;
 }
