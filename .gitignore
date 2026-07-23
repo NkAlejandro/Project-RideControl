@@ -27,3 +27,4 @@ dist-ssr
 .vercel
 .firebase
 .env*
+secret-temp.json
