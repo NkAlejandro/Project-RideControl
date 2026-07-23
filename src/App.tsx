@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from "@/components/auth-provider";
 import { SyncProvider } from "@/components/sync-provider";
 import { tryRegisterFCM, tryUnregisterFCM } from "@/lib/firebase-messaging";
 import { AppLayout } from "@/layout/app-layout";
+import { TutorialOverlay } from "@/components/tutorial-overlay";
 import LoginPage from "@/features/auth/pages/login-page";
 import DashboardPage from "@/features/dashboard/pages/dashboard-page";
 import OnboardingPage from "@/features/onboarding/pages/onboarding-page";
@@ -14,7 +15,7 @@ import DailyClosePage from "@/features/daily-close/pages/daily-close-page";
 import VehiclesPage from "@/features/vehicles/pages/vehicles-page";
 import FuelPage from "@/features/fuel/pages/fuel-page";
 import MaintenancePage from "@/features/maintenance/pages/maintenance-page";
-import WalletsPage from "@/features/wallets/pages/wallets-page";
+import FinancePage from "@/features/finance/pages/finance-page";
 import GoalsPage from "@/features/goals/pages/goals-page";
 import ReportsPage from "@/features/reports/pages/reports-page";
 import StatisticsPage from "@/features/statistics/pages/statistics-page";
@@ -25,7 +26,7 @@ const pageTransition = {
   initial: { opacity: 0, y: 8 },
   animate: { opacity: 1, y: 0 },
   exit: { opacity: 0, y: -8 },
-  transition: { duration: 0.2, ease: "easeOut" as const },
+  transition: { duration: 0.35, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
 };
 
 function AnimatedRoutes() {
@@ -65,9 +66,9 @@ function AnimatedRoutes() {
               <MaintenancePage />
             </motion.div>
           } />
-          <Route path="/wallets" element={
+          <Route path="/finance" element={
             <motion.div {...pageTransition}>
-              <WalletsPage />
+              <FinancePage />
             </motion.div>
           } />
           <Route path="/goals" element={
@@ -110,6 +111,14 @@ function AppContent() {
   const { user, loading } = useAuth();
 
   useEffect(() => {
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        window.location.reload();
+      });
+    }
+  }, []);
+
+  useEffect(() => {
     if (!user) return;
     const handleFCM = (e: Event) => {
       const detail = (e as CustomEvent).detail;
@@ -149,6 +158,7 @@ function AppContent() {
   return (
     <SyncProvider>
       <BrowserRouter>
+        <TutorialOverlay />
         <AnimatedRoutes />
       </BrowserRouter>
     </SyncProvider>

@@ -1,33 +1,66 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sidebar } from "./sidebar";
 import { Header } from "./header";
 import { BottomNav } from "./bottom-nav";
+import { usePlatform } from "../hooks/use-platform";
 
 const pageVariants = {
-  initial: { opacity: 0, y: 16, filter: "blur(4px)" },
+  initial: { opacity: 0, y: 16 },
   animate: {
     opacity: 1,
     y: 0,
-    filter: "blur(0px)",
     transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
   },
   exit: {
     opacity: 0,
     y: -8,
-    filter: "blur(4px)",
-    transition: { duration: 0.25, ease: [0.4, 0, 1, 1] as [number, number, number, number] },
+    transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
+  },
+};
+
+const pageVariantsAndroid = {
+  initial: { opacity: 0 },
+  animate: {
+    opacity: 1,
+    transition: { duration: 0.2 },
+  },
+  exit: {
+    opacity: 0,
+    transition: { duration: 0.15 },
   },
 };
 
 export function AppLayout() {
+  const { isAndroid } = usePlatform();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
+  const sidebarRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!sidebarOpen) return;
+    function handleClick(e: MouseEvent | TouchEvent) {
+      const target = e.target as Node;
+      if (sidebarRef.current?.contains(target)) return;
+      if ((target as HTMLElement)?.closest?.("[data-menu-toggle]")) return;
+      setSidebarOpen(false);
+    }
+    document.addEventListener("mousedown", handleClick, { capture: true });
+    document.addEventListener("touchstart", handleClick, { capture: true, passive: true });
+    return () => {
+      document.removeEventListener("mousedown", handleClick, { capture: true });
+      document.removeEventListener("touchstart", handleClick, { capture: true });
+    };
+  }, [sidebarOpen]);
+
+  const variants = isAndroid ? pageVariantsAndroid : pageVariants;
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-surface">
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <div ref={sidebarRef}>
+        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      </div>
 
       <AnimatePresence>
         {sidebarOpen && (
@@ -35,8 +68,8 @@ export function AppLayout() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
+            transition={{ duration: isAndroid ? 0.2 : 0.35 }}
+            className="fixed inset-0 z-40 bg-overlay lg:hidden"
             onClick={() => setSidebarOpen(false)}
           />
         )}
@@ -49,7 +82,7 @@ export function AppLayout() {
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}
-              variants={pageVariants}
+              variants={variants}
               initial="initial"
               animate="animate"
               exit="exit"

@@ -7,10 +7,9 @@ import {
   Bike,
   Fuel,
   Wrench,
-  Wallet,
+  PieChart,
   Target,
   BarChart3,
-  PieChart,
   Settings,
   Sparkles,
   LogOut,
@@ -24,7 +23,7 @@ const navItems = [
   { to: "/vehicles", icon: Bike, label: "Vehículos" },
   { to: "/fuel", icon: Fuel, label: "Combustible" },
   { to: "/maintenance", icon: Wrench, label: "Mantenimiento" },
-  { to: "/wallets", icon: Wallet, label: "Billeteras" },
+  { to: "/finance", icon: PieChart, label: "Finanzas" },
   { to: "/goals", icon: Target, label: "Objetivos" },
   { to: "/reports", icon: PieChart, label: "Reportes" },
   { to: "/statistics", icon: BarChart3, label: "Estadísticas" },
@@ -47,7 +46,7 @@ const itemVariants = {
   visible: {
     opacity: 1,
     x: 0,
-    transition: { duration: 0.35, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
+    transition: { duration: 0.45, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
   },
 };
 
@@ -61,12 +60,12 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
   return (
     <div className="flex h-full flex-col border-r border-theme-subtle bg-surface">
       <div className="flex h-14 items-center justify-between px-4 lg:h-16 lg:px-5">
-        <div className="flex items-center gap-3">
-          <div className="icon-bounce flex h-8 w-8 items-center justify-center rounded-xl bg-white cursor-pointer">
-            <span className="text-xs font-bold text-black">RC</span>
+        <NavLink to="/" className="flex items-center gap-3">
+          <div className="icon-bounce flex h-8 w-8 items-center justify-center rounded-xl bg-primary-500">
+            <span className="text-xs font-bold text-inverse-color">RC</span>
           </div>
           <span className="text-sm font-semibold tracking-tight text-primary-color">RideControl</span>
-        </div>
+        </NavLink>
         {onClose && (
           <button
             onClick={onClose}
@@ -143,7 +142,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             initial={{ x: "-100%" }}
             animate={{ x: 0 }}
             exit={{ x: "-100%" }}
-            transition={{ type: "spring" as const, stiffness: 300, damping: 30 }}
+            transition={{ type: "spring" as const, stiffness: 280, damping: 26 }}
             className="fixed inset-y-0 left-0 z-50 w-[min(288px,85vw)] lg:hidden"
           >
             <SidebarContent onClose={onClose} />
