@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { motion, useMotionValue, animate } from "framer-motion";
 import {
   Sparkles,
@@ -16,6 +16,7 @@ import {
   Brain,
   Zap,
   Shield,
+  Bot,
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardValue } from "@/components/ui/card";
 import { useDailyEntries } from "@/hooks/use-daily-entries";
@@ -25,6 +26,15 @@ import { useVehicles } from "@/hooks/use-vehicles";
 import { useFuel } from "@/hooks/use-fuel";
 import { useAppStore } from "@/store/use-app-store";
 import { cn, formatCurrency } from "@/lib/utils";
+import AIChat from "@/features/ai/components/ai-chat";
+import { setActiveProfile } from "@/lib/ai-service";
+
+type AITab = "analytics" | "chat";
+
+const tabs: { id: AITab; icon: React.ReactNode; label: string }[] = [
+  { id: "analytics", icon: <BarChart3 className="h-4 w-4" />, label: "Analítica" },
+  { id: "chat", icon: <Bot className="h-4 w-4" />, label: "Chat IA" },
+];
 
 interface Recommendation {
   id: string;
@@ -82,12 +92,20 @@ function AnimatedNumber({ value }: { value: number }) {
 
 export default function AiPage() {
   const activeVehicleId = useAppStore((s) => s.activeVehicleId);
+  const profile = useAppStore((s) => s.profile);
   const [now] = useState(() => Date.now());
+  const [tab, setTab] = useState<AITab>("analytics");
   const { entries, loading: entriesLoading } = useDailyEntries(activeVehicleId ?? undefined);
   const { items: maintenanceItems, loading: maintenanceLoading } = useMaintenance(activeVehicleId ?? undefined);
   const { goals, loading: goalsLoading } = useGoals();
   const { vehicles, loading: vehiclesLoading } = useVehicles();
   const { records: fuelRecords, loading: fuelLoading } = useFuel(activeVehicleId ?? undefined);
+
+  useEffect(() => {
+    if (profile?.id) {
+      setActiveProfile(profile.id);
+    }
+  }, [profile?.id]);
 
   const loading = entriesLoading || maintenanceLoading || goalsLoading || vehiclesLoading || fuelLoading;
 
@@ -118,11 +136,20 @@ export default function AiPage() {
 
     const earningsByApp: Record<string, { total: number; count: number }> = {};
     entries.forEach((e) => {
-      e.appsUsed.forEach((app) => {
-        if (!earningsByApp[app]) earningsByApp[app] = { total: 0, count: 0 };
-        earningsByApp[app].total += e.earnings / e.appsUsed.length;
-        earningsByApp[app].count += 1;
-      });
+      if (e.earningsByApp && Object.keys(e.earningsByApp).length > 0) {
+        for (const [app, val] of Object.entries(e.earningsByApp)) {
+          if (!earningsByApp[app]) earningsByApp[app] = { total: 0, count: 0 };
+          earningsByApp[app].total += val;
+          earningsByApp[app].count += 1;
+        }
+      } else if (e.appsUsed.length > 0) {
+        const perApp = e.earnings / e.appsUsed.length;
+        e.appsUsed.forEach((app) => {
+          if (!earningsByApp[app]) earningsByApp[app] = { total: 0, count: 0 };
+          earningsByApp[app].total += perApp;
+          earningsByApp[app].count += 1;
+        });
+      }
     });
     const appList = Object.entries(earningsByApp)
       .map(([name, data]) => ({
@@ -402,6 +429,27 @@ export default function AiPage() {
           <h1 className="text-2xl font-bold text-primary-color">Asistente IA</h1>
           <p className="mt-1 text-sm text-secondary-color">Analizando datos...</p>
         </div>
+        <div className="mb-4 flex gap-1 rounded-2xl bg-hover p-1">
+          {tabs.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={cn(
+                "flex flex-1 items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-medium transition-all",
+                tab === t.id
+                  ? "bg-card text-primary-color shadow-sm"
+                  : "text-secondary-color hover:text-primary-color",
+              )}
+            >
+              {t.icon}
+              {t.label}
+            </button>
+          ))}
+        </div>
+        {tab === "chat" ? (
+          <AIChat />
+        ) : (
+          <>
         <div className="flex items-center justify-center py-20">
           <div className="flex flex-col items-center gap-4">
             <motion.div
@@ -424,6 +472,8 @@ export default function AiPage() {
             </div>
           </div>
         </div>
+        </>
+        )}
       </div>
     );
   }
@@ -435,7 +485,27 @@ export default function AiPage() {
           <h1 className="text-2xl font-bold text-primary-color">Asistente IA</h1>
           <p className="mt-1 text-sm text-secondary-color">Recomendaciones inteligentes</p>
         </div>
-
+        <div className="mb-4 flex gap-1 rounded-2xl bg-hover p-1">
+          {tabs.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={cn(
+                "flex flex-1 items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-medium transition-all",
+                tab === t.id
+                  ? "bg-card text-primary-color shadow-sm"
+                  : "text-secondary-color hover:text-primary-color",
+              )}
+            >
+              {t.icon}
+              {t.label}
+            </button>
+          ))}
+        </div>
+        {tab === "chat" ? (
+          <AIChat />
+        ) : (
+          <>
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -459,7 +529,7 @@ export default function AiPage() {
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: "spring" as const, stiffness: 120, damping: 12 }}
+            transition={{ type: "spring" as const, stiffness: 280, damping: 24 }}
             className="flex flex-col items-center gap-4"
           >
             <motion.div
@@ -521,7 +591,9 @@ export default function AiPage() {
             </motion.div>
           </motion.div>
         </div>
-      </div>
+      </>
+    )}
+    </div>
     );
   }
 
@@ -531,8 +603,28 @@ export default function AiPage() {
         <h1 className="text-2xl font-bold text-primary-color">Asistente IA</h1>
         <p className="mt-1 text-sm text-secondary-color">Análisis inteligente de tu negocio</p>
       </div>
-
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ type: "spring" as const, stiffness: 100, damping: 15 }}>
+      <div className="flex gap-1 rounded-2xl bg-hover p-1">
+        {tabs.map((t) => (
+          <button
+            key={t.id}
+            onClick={() => setTab(t.id)}
+            className={cn(
+              "flex flex-1 items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-medium transition-all",
+              tab === t.id
+                ? "bg-card text-primary-color shadow-sm"
+                : "text-secondary-color hover:text-primary-color",
+            )}
+          >
+            {t.icon}
+            {t.label}
+          </button>
+        ))}
+      </div>
+      {tab === "chat" ? (
+        <AIChat />
+      ) : (
+        <>
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ type: "spring" as const, stiffness: 280, damping: 24 }}>
         <Card className="relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-primary-500/5 via-transparent to-transparent pointer-events-none" />
           <div className="relative flex items-center gap-6">
@@ -619,7 +711,7 @@ export default function AiPage() {
             key={item.title}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: item.delay, type: "spring" as const, stiffness: 120, damping: 14 }}
+            transition={{ delay: item.delay, type: "spring" as const, stiffness: 280, damping: 24 }}
           >
             <Card padding="sm">
               <CardTitle>{item.title}</CardTitle>
@@ -675,7 +767,7 @@ export default function AiPage() {
                 key={rec.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.35 + i * 0.07, type: "spring" as const, stiffness: 120, damping: 14 }}
+                transition={{ delay: 0.35 + i * 0.07, type: "spring" as const, stiffness: 280, damping: 24 }}
               >
                 <Card padding="sm" className="relative overflow-hidden card-interactive">
                   <div className={cn("absolute left-0 top-0 bottom-0 w-1", pConfig.dot)} />
@@ -781,7 +873,7 @@ export default function AiPage() {
                       <motion.div
                         initial={{ height: 0 }}
                         animate={{ height: `${Math.max(height, 4)}%` }}
-                        transition={{ duration: 0.6, delay: 0.7 + i * 0.06, type: "spring" as const, stiffness: 80 }}
+                        transition={{ duration: 0.6, delay: 0.7 + i * 0.06, type: "spring" as const, stiffness: 280 }}
                         className={cn(
                           "w-full max-w-[24px] rounded-t-md",
                           isBest ? "bg-primary-500" : "bg-surface-400"
@@ -806,6 +898,8 @@ export default function AiPage() {
           </Card>
         </motion.div>
       )}
+    </>
+    )}
     </div>
   );
 }
