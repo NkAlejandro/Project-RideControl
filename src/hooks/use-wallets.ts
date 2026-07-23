@@ -1,50 +1,38 @@
-import { useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect } from "react";
+import { useLiveQuery } from "dexie-react-hooks";
 import { walletRepository } from "@/database/repositories/wallet-repository";
 import { useAppStore } from "@/store/use-app-store";
 import type { Wallet } from "@/types";
 
 export function useWallets() {
   const profile = useAppStore((s) => s.profile);
-  const [wallets, setWallets] = useState<Wallet[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  const load = useCallback(async () => {
-    if (!profile) {
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    const all = await walletRepository.getByProfile(profile.id);
-    setWallets(all);
-    setLoading(false);
-  }, [profile]);
+  const wallets = useLiveQuery(
+    () => profile ? walletRepository.getByProfile(profile.id) : Promise.resolve([]),
+    [profile],
+    []
+  );
 
   useEffect(() => {
-    let cancelled = false;
-    async function init() {
-      if (cancelled) return;
-      await load();
+    if (profile && wallets && wallets.length === 0) {
+      walletRepository.ensureDefaults(profile.id);
     }
-    void init();
-    return () => { cancelled = true; };
-  }, [load]);
+  }, [profile, wallets]);
 
   const create = useCallback(async (data: Omit<Wallet, "id" | "createdAt" | "updatedAt">) => {
-    const wallet = await walletRepository.create(data);
-    await load();
-    return wallet;
-  }, [load]);
+    return walletRepository.create(data);
+  }, []);
 
   const update = useCallback(async (id: string, data: Partial<Wallet>) => {
     await walletRepository.update(id, data);
-    await load();
-  }, [load]);
+  }, []);
 
-  const distribute = useCallback(async (amount: number) => {
+  const distribute = useCallback(async (amount: number, fuelCost = 0, expenses = 0) => {
     if (!profile) return;
-    const updated = await walletRepository.distribute(profile.id, amount);
-    setWallets(updated);
+    await walletRepository.distribute(profile.id, amount, undefined, fuelCost, expenses);
   }, [profile]);
 
-  return { wallets, loading, create, update, distribute, reload: load };
+  const loading = wallets === undefined;
+
+  return { wallets, loading, create, update, distribute, reload: () => {} };
 }

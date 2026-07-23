@@ -1,43 +1,40 @@
-import { useState, useEffect, useCallback } from "react";
+import { useCallback } from "react";
+import { useLiveQuery } from "dexie-react-hooks";
 import { dailyEntryRepository } from "@/database/repositories/daily-entry-repository";
 import type { DailyEntry } from "@/types";
 
 export function useDailyEntries(vehicleId?: string) {
-  const [entries, setEntries] = useState<DailyEntry[]>([]);
-  const [todayEntry, setTodayEntry] = useState<DailyEntry | undefined>();
-  const [loading, setLoading] = useState(true);
+  const result = useLiveQuery(
+    async () => {
+      const all = vehicleId
+        ? await dailyEntryRepository.getByVehicle(vehicleId)
+        : await dailyEntryRepository.getAll();
+      const today = await dailyEntryRepository.getToday();
+      return { entries: all, todayEntry: today ?? null };
+    },
+    [vehicleId]
+  );
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    const all = vehicleId
-      ? await dailyEntryRepository.getByVehicle(vehicleId)
-      : await dailyEntryRepository.getAll();
-    setEntries(all);
-    const today = await dailyEntryRepository.getToday();
-    setTodayEntry(today);
-    setLoading(false);
-  }, [vehicleId]);
-
-  useEffect(() => {
-    let cancelled = false;
-    async function init() {
-      if (cancelled) return;
-      await load();
-    }
-    void init();
-    return () => { cancelled = true; };
-  }, [load]);
+  const loading = !result;
+  const entries = result?.entries ?? [];
+  const todayEntry: DailyEntry | undefined = result?.todayEntry ?? undefined;
 
   const create = useCallback(async (data: Omit<DailyEntry, "id" | "createdAt" | "updatedAt">) => {
-    const entry = await dailyEntryRepository.create(data);
-    await load();
-    return entry;
-  }, [load]);
+    return dailyEntryRepository.create(data);
+  }, []);
+
+  const updateEntry = useCallback(async (id: string, data: Partial<DailyEntry>) => {
+    await dailyEntryRepository.update(id, data);
+  }, []);
+
+  const removeEntry = useCallback(async (id: string) => {
+    await dailyEntryRepository.delete(id);
+  }, []);
 
   const getStats = useCallback(async (start: Date, end: Date) => {
     if (!vehicleId) return null;
     return dailyEntryRepository.getStats(vehicleId, start, end);
   }, [vehicleId]);
 
-  return { entries, todayEntry, loading, create, reload: load, getStats };
+  return { entries, todayEntry, loading, create, update: updateEntry, remove: removeEntry, reload: () => {}, getStats };
 }

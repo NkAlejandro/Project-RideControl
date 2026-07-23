@@ -1,49 +1,70 @@
-import { useState, useEffect, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { goalRepository } from "@/database/repositories/goal-repository";
+import { profileRepository } from "@/database/repositories/profile-repository";
 import { useAppStore } from "@/store/use-app-store";
 import type { Goal } from "@/types";
 
+function getLocalProfileId(): string {
+  try {
+    return JSON.parse(localStorage.getItem("ridecontrol-storage") || "{}")?.state?.profile?.id ?? "";
+  } catch {
+    return "";
+  }
+}
+
 export function useGoals() {
-  const profile = useAppStore((s) => s.profile);
+  const storeProfile = useAppStore((s) => s.profile);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const load = useCallback(async () => {
-    if (!profile) {
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    const all = await goalRepository.getByProfile(profile.id);
-    setGoals(all);
-    setLoading(false);
-  }, [profile]);
-
   useEffect(() => {
-    let cancelled = false;
-    async function init() {
-      if (cancelled) return;
-      await load();
+    setLoading(true);
+
+    const timer = setTimeout(() => setLoading(false), 4000);
+
+    (async () => {
+      try {
+        const profileId =
+          storeProfile?.id ??
+          (await profileRepository.get())?.id ??
+          getLocalProfileId();
+
+        if (!profileId) {
+          clearTimeout(timer);
+          setLoading(false);
+          return;
+        }
+        const data = await goalRepository.getByProfile(profileId);
+        clearTimeout(timer);
+        setGoals(data);
+        setLoading(false);
+      } catch (err) {
+        console.error("useGoals:", err);
+        clearTimeout(timer);
+        setLoading(false);
+      }
+    })();
+
+    return () => clearTimeout(timer);
+  }, [storeProfile]);
+
+  const create = async (data: Omit<Goal, "id" | "createdAt" | "updatedAt">) => {
+    const result = await goalRepository.create(data);
+    setGoals((prev) => [...prev, result]);
+    return result;
+  };
+
+  const addToGoal = async (id: string, amount: number) => {
+    const updated = await goalRepository.addToGoal(id, amount);
+    if (updated) {
+      setGoals((prev) => prev.map((g) => (g.id === id ? updated : g)));
     }
-    void init();
-    return () => { cancelled = true; };
-  }, [load]);
+  };
 
-  const create = useCallback(async (data: Omit<Goal, "id" | "createdAt" | "updatedAt">) => {
-    const goal = await goalRepository.create(data);
-    await load();
-    return goal;
-  }, [load]);
-
-  const addToGoal = useCallback(async (id: string, amount: number) => {
-    await goalRepository.addToGoal(id, amount);
-    await load();
-  }, [load]);
-
-  const remove = useCallback(async (id: string) => {
+  const remove = async (id: string) => {
     await goalRepository.delete(id);
-    await load();
-  }, [load]);
+    setGoals((prev) => prev.filter((g) => g.id !== id));
+  };
 
-  return { goals, loading, create, addToGoal, remove, reload: load };
+  return { goals, loading, create, addToGoal, remove };
 }

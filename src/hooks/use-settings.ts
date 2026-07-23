@@ -10,6 +10,7 @@ export function useSettings() {
 
   const load = useCallback(async () => {
     if (!profile) {
+      setSettings(undefined);
       setLoading(false);
       return;
     }
@@ -21,19 +22,27 @@ export function useSettings() {
 
   useEffect(() => {
     let cancelled = false;
-    async function init() {
+    (async () => {
       if (cancelled) return;
       await load();
-    }
-    void init();
+    })();
     return () => { cancelled = true; };
   }, [load]);
 
+  useEffect(() => {
+    const handler = () => load();
+    window.addEventListener("db-synced", handler);
+    return () => window.removeEventListener("db-synced", handler);
+  }, [load]);
+
   const update = useCallback(async (data: Partial<AppSettings>) => {
-    if (!settings) return;
-    await settingsRepository.update(settings.id, data);
-    await load();
-  }, [settings, load]);
+    const profile = useAppStore.getState().profile;
+    if (!profile) return;
+    const s = await settingsRepository.get(profile.id);
+    if (!s) return;
+    await settingsRepository.update(s.id, data);
+    setSettings({ ...s, ...data, updatedAt: new Date() });
+  }, []);
 
   return { settings, loading, update, reload: load };
 }
