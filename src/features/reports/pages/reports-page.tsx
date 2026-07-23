@@ -78,8 +78,15 @@ function buildDailyData(entries: DailyEntry[]) {
 function buildAppBreakdown(entries: DailyEntry[]) {
   const map = new Map<string, number>();
   for (const e of entries) {
-    for (const app of e.appsUsed) {
-      map.set(app, (map.get(app) || 0) + e.earnings);
+    if (e.earningsByApp && Object.keys(e.earningsByApp).length > 0) {
+      for (const [app, val] of Object.entries(e.earningsByApp)) {
+        map.set(app, (map.get(app) || 0) + val);
+      }
+    } else if (e.appsUsed.length > 0) {
+      const perApp = e.appsUsed.length > 0 ? e.earnings / e.appsUsed.length : 0;
+      for (const app of e.appsUsed) {
+        map.set(app, (map.get(app) || 0) + perApp);
+      }
     }
   }
   return Array.from(map.entries())
@@ -419,14 +426,14 @@ export default function ReportsPage() {
           >
             {period === p.key && (
               <motion.div
-                className="absolute inset-0 rounded-full bg-white"
+                className="absolute inset-0 rounded-full bg-primary-500"
                 layoutId="activePeriod"
-                transition={{ type: "spring" as const, stiffness: 400, damping: 30 }}
+                transition={{ type: "spring" as const, stiffness: 280, damping: 24 }}
               />
             )}
             <span className={cn(
               "relative z-10",
-              period === p.key ? "text-black" : "text-secondary-color hover:text-primary-color",
+              period === p.key ? "text-on-primary" : "text-secondary-color hover:text-primary-color",
             )}>
               {p.label}
             </span>
@@ -440,7 +447,7 @@ export default function ReportsPage() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.2 }}
+          transition={{ duration: 0.35 }}
           className="space-y-6"
         >
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">

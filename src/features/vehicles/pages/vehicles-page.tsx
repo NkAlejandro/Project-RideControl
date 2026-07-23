@@ -139,7 +139,7 @@ function CelebrationToast({ show, message }: { show: boolean; message: string })
           initial={{ opacity: 0, y: -20, scale: 0.8 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -30, scale: 0.8 }}
-          transition={{ type: "spring", stiffness: 400, damping: 15 }}
+                          transition={{ type: "spring", stiffness: 280, damping: 24 }}
         >
           <motion.div
             className="glass-liquid-strong rounded-full px-5 py-2.5 flex items-center gap-2.5"
@@ -256,7 +256,7 @@ function VehicleCard({
               <div className="flex items-center gap-3">
                 <motion.div
                   className={cn(
-                    "flex h-11 w-11 items-center justify-center rounded-xl backdrop-blur-[16px] transition-colors duration-300",
+                    "flex h-11 w-11 items-center justify-center rounded-xl backdrop-blur-[8px] transition-colors duration-300",
                     isActive ? "bg-white/[0.1]" : "bg-white/[0.04]",
                   )}
                   whileHover={{ rotate: [0, -10, 10, -5, 5, 0], transition: { duration: 0.5 } }}
@@ -291,10 +291,10 @@ function VehicleCard({
               <div className="flex items-center gap-2">
                 {isActive ? (
                   <motion.div
-                    className="flex items-center gap-1.5 rounded-full bg-white/[0.08] px-2.5 py-1 backdrop-blur-[8px]"
+                    className=                    "flex items-center gap-1.5 rounded-full bg-white/[0.08] px-2.5 py-1 backdrop-blur-[6px]"
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 12 }}
+                    transition={{ type: "spring", stiffness: 280, damping: 20 }}
                   >
                     <motion.div
                       className="h-1.5 w-1.5 rounded-full bg-white"
@@ -389,7 +389,7 @@ function VehicleCard({
                 <motion.button
                   whileHover={{ scale: 1.15, backgroundColor: "rgba(255,255,255,0.1)" }}
                   whileTap={{ scale: 0.85 }}
-                  transition={{ type: "spring", stiffness: 500, damping: 12 }}
+                  transition={{ type: "spring", stiffness: 280, damping: 20 }}
                   onClick={(e) => { e.stopPropagation(); onEdit(); }}
                   className="flex h-8 w-8 items-center justify-center rounded-lg text-white/40 transition-colors hover:text-white/70"
                 >
@@ -398,7 +398,7 @@ function VehicleCard({
                 <motion.button
                   whileHover={{ scale: 1.15, backgroundColor: "rgba(248,113,113,0.12)" }}
                   whileTap={{ scale: 0.85 }}
-                  transition={{ type: "spring", stiffness: 500, damping: 12 }}
+                  transition={{ type: "spring", stiffness: 280, damping: 20 }}
                   onClick={handleDelete}
                   className={cn(
                     "flex h-8 w-8 items-center justify-center rounded-lg text-red-400/60 transition-colors hover:text-red-400",
@@ -524,7 +524,7 @@ function VehicleFormSheet({
                       key={value}
                       type="button"
                       variants={typeIndicatorVariants(idx)}
-                      whileHover={{ scale: 1.03, transition: { type: "spring" as const, stiffness: 400, damping: 10 } }}
+                      whileHover={{ scale: 1.03, transition: { type: "spring" as const, stiffness: 280, damping: 20 } }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => reset({ ...watch(), type: value })}
                       className={cn(
@@ -559,7 +559,7 @@ function VehicleFormSheet({
                           layoutId="typeIndicator"
                           initial={{ scaleX: 0 }}
                           animate={{ scaleX: 1 }}
-                          transition={{ type: "spring", stiffness: 400, damping: 15 }}
+          transition={{ type: "spring", stiffness: 280, damping: 24 }}
                         />
                       )}
                     </motion.button>
@@ -623,14 +623,14 @@ function VehicleFormSheet({
                 <motion.div className="flex-1" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}>
                   <Button
                     type="submit" size="sm" loading={isSubmitting}
-                    className="w-full bg-white text-[15px] font-semibold text-black shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:bg-white/90"
+                    className="w-full bg-primary-500 text-[15px] font-semibold text-on-primary shadow-lg hover:bg-primary-600"
                   >
                     {editingVehicle ? (
                       <motion.span
                         key="edit"
                         initial={{ opacity: 0, y: -4 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.2 }}
+                        transition={{ duration: 0.3 }}
                       >
                         Actualizar
                       </motion.span>
@@ -639,7 +639,7 @@ function VehicleFormSheet({
                         key="create"
                         initial={{ opacity: 0, y: -4 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.2 }}
+                        transition={{ duration: 0.3 }}
                       >
                         Crear
                       </motion.span>
@@ -742,7 +742,7 @@ export default function VehiclesPage() {
           >
             <Button
               size="sm"
-              className="bg-white/[0.08] text-white/80 backdrop-blur-[12px] hover:bg-white/[0.12] border border-white/[0.1] gap-2"
+              className="bg-white/[0.08] text-white/80 backdrop-blur-[8px] hover:bg-white/[0.12] border border-white/[0.1] gap-2"
               onClick={() => { setEditingVehicle(null); setSheetOpen(true); }}
             >
               <Plus className="h-3.5 w-3.5" />
@@ -822,7 +822,7 @@ export default function VehiclesPage() {
                 <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.94 }}>
                   <Button
                     size="sm"
-                    className="bg-white/[0.08] text-white/70 backdrop-blur-[12px] hover:bg-white/[0.12] border border-white/[0.1] gap-2"
+                    className="bg-white/[0.08] text-white/70 backdrop-blur-[8px] hover:bg-white/[0.12] border border-white/[0.1] gap-2"
                     onClick={() => setSheetOpen(true)}
                   >
                     <Plus className="h-3.5 w-3.5" />

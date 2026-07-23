@@ -261,7 +261,7 @@ export default function WalletsPage() {
                   <div className="mb-3 flex items-center justify-between">
                     <motion.div
                       whileHover={{ scale: 1.15, rotate: 5 }}
-                      transition={{ type: "spring" as const, stiffness: 400, damping: 10 }}
+                      transition={{ type: "spring" as const, stiffness: 280, damping: 20 }}
                       className={cn(
                         "icon-bounce flex h-10 w-10 items-center justify-center rounded-2xl",
                         WALLET_COLORS[wallet.type] || "bg-surface-500",
@@ -354,7 +354,7 @@ export default function WalletsPage() {
           className="space-y-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.2 }}
+          transition={{ duration: 0.3 }}
         >
           <motion.p
             className="text-sm text-secondary-color"
@@ -438,7 +438,7 @@ export default function WalletsPage() {
               className="text-xs text-danger-400"
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
-              transition={{ duration: 0.2 }}
+              transition={{ duration: 0.3 }}
             >
               Los porcentajes deben sumar exactamente 100%
             </motion.p>

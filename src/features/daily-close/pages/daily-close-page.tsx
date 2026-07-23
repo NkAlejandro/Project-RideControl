@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useLocation } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion, AnimatePresence, useSpring, useTransform, useMotionValue } from "framer-motion";
@@ -15,19 +16,22 @@ import {
   TrendingUp,
   ArrowRight,
   RotateCcw,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { dailyEntrySchema, type DailyEntryFormData } from "@/lib/schemas";
+import type { DailyEntry } from "@/types";
 import { useVehicles } from "@/hooks/use-vehicles";
 import { useDailyEntries } from "@/hooks/use-daily-entries";
 import { useAppStore } from "@/store/use-app-store";
 import { vehicleRepository } from "@/database/repositories/vehicle-repository";
+import { FinanceEngine } from "@/lib/finance-engine";
 import { walletRepository } from "@/database/repositories/wallet-repository";
 import { cn, formatCurrency, formatNumber } from "@/lib/utils";
 import { playCoin } from "@/lib/sounds";
-import { useEffect } from "react";
 
 const APPS = ["Uber", "DiDi", "InDrive", "Rappi", "Otro"];
 
@@ -90,16 +94,58 @@ const summaryItem = {
   show: {
     opacity: 1,
     x: 0,
-    transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
+    transition: { duration: 0.45, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
   },
 };
 
+function toDate(v: unknown): Date | null {
+  if (!v) return null;
+  if (typeof (v as Record<string, unknown>).toDate === "function") {
+    const d = (v as { toDate(): Date }).toDate();
+    return isNaN(d.getTime()) ? null : d;
+  }
+  if (v instanceof Date && !isNaN(v.getTime())) return v;
+  const d = new Date(v as string | number);
+  return isNaN(d.getTime()) ? null : d;
+}
+
 export default function DailyClosePage() {
+  const location = useLocation();
   const { activeVehicle } = useVehicles();
-  const { todayEntry, create } = useDailyEntries(activeVehicle?.id);
+  const { entries, todayEntry, create, update, remove } = useDailyEntries(activeVehicle?.id);
   const profile = useAppStore((s) => s.profile);
   const [saving, setSaving] = useState(false);
   const [savedSummary, setSavedSummary] = useState<SavedSummary | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const initialEditProcessed = useRef(false);
+
+  useEffect(() => {
+    if (initialEditProcessed.current || entries.length === 0) return;
+    const state = location.state as { editEntryId?: string } | null;
+    if (state?.editEntryId) {
+      const entry = entries.find((e) => e.id === state.editEntryId);
+      if (entry) {
+        setEditingId(entry.id);
+        setSavedSummary(null);
+        const entryDate = toDate(entry.date) ?? new Date();
+        reset({
+          vehicleId: entry.vehicleId,
+          date: entryDate,
+          earnings: entry.earnings,
+          kilometers: entry.kilometers,
+          fuelAmount: entry.fuelAmount,
+          fuelCost: entry.fuelCost,
+          expenses: entry.expenses,
+          hoursWorked: entry.hoursWorked ?? undefined,
+          appsUsed: Array.isArray(entry.appsUsed) ? entry.appsUsed : [],
+          earningsByApp: entry.earningsByApp ?? {},
+          notes: entry.notes ?? "",
+        });
+        window.history.replaceState({}, "");
+      }
+    }
+    initialEditProcessed.current = true;
+  }, [entries, location.state]);
 
   const {
     register,
@@ -107,6 +153,7 @@ export default function DailyClosePage() {
     control,
     watch,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<DailyEntryFormData>({
     resolver: zodResolver(dailyEntrySchema) as never,
@@ -120,28 +167,44 @@ export default function DailyClosePage() {
       expenses: todayEntry?.expenses ?? 0,
       hoursWorked: todayEntry?.hoursWorked ?? undefined,
       appsUsed: todayEntry?.appsUsed ?? [],
+      earningsByApp: todayEntry?.earningsByApp ?? {},
       notes: todayEntry?.notes ?? "",
     },
   });
 
+  useEffect(() => {
+    if (activeVehicle?.id) setValue("vehicleId", activeVehicle.id);
+  }, [activeVehicle?.id, setValue]);
+
   const watchedEarnings = watch("earnings") || 0;
   const watchedExpenses = watch("expenses") || 0;
   const watchedFuelCost = watch("fuelCost") || 0;
+  const watchedApps = watch("appsUsed");
 
   const handleAppToggle = (app: string, currentApps: string[], onChange: (v: string[]) => void) => {
     if (currentApps.includes(app)) {
-      onChange(currentApps.filter((a) => a !== app));
+      const updated = currentApps.filter((a) => a !== app);
+      onChange(updated);
+      const eba = { ...(watch("earningsByApp") || {}) };
+      delete eba[app];
+      setValue("earningsByApp", eba);
     } else {
       onChange([...currentApps, app]);
     }
   };
 
   const onSubmit = async (data: DailyEntryFormData) => {
-    if (!activeVehicle || !profile) return;
+    if (!activeVehicle) return toast.error("No hay un vehículo activo");
+    if (!profile) return toast.error("Completa tu perfil en Configuración antes de guardar");
     setSaving(true);
 
     try {
-      await create({
+      const earningsByApp = data.earningsByApp && Object.keys(data.earningsByApp).length > 0
+        ? Object.fromEntries(
+            Object.entries(data.earningsByApp).filter(([, v]) => v !== undefined && v !== null)
+          )
+        : undefined;
+      const entryData = {
         vehicleId: activeVehicle.id,
         date: new Date(),
         earnings: data.earnings,
@@ -151,18 +214,27 @@ export default function DailyClosePage() {
         expenses: data.expenses,
         hoursWorked: data.hoursWorked,
         appsUsed: data.appsUsed,
+        earningsByApp,
         notes: data.notes,
-      });
+      };
 
-      await vehicleRepository.update(activeVehicle.id, {
-        mileage: activeVehicle.mileage + data.kilometers,
-      });
-
-      if (data.earnings > 0) {
-        await walletRepository.distribute(profile.id, data.earnings);
+      if (editingId) {
+        await update(editingId, entryData);
+      } else {
+        await create(entryData);
       }
 
-      const net = data.earnings - data.expenses - data.fuelCost;
+      if (!editingId) {
+        await vehicleRepository.update(activeVehicle.id, {
+          mileage: activeVehicle.mileage + data.kilometers,
+        });
+
+        if (data.earnings > 0) {
+          await walletRepository.distribute(profile.id, data.earnings, undefined, data.fuelCost, data.expenses);
+        }
+      }
+
+      const net = FinanceEngine.calculateNetIncome(data.earnings, data.fuelCost, data.expenses);
       setSavedSummary({
         earnings: data.earnings,
         kilometers: data.kilometers,
@@ -170,9 +242,10 @@ export default function DailyClosePage() {
         expenses: data.expenses,
         netProfit: net,
       });
+      setEditingId(null);
 
       try { playCoin(); } catch {}
-      toast.success("Cierre del día guardado", {
+      toast.success(editingId ? "Cierre actualizado" : "Cierre del día guardado", {
         description: `Ganancia neta: ${formatCurrency(net)}`,
       });
     } catch {
@@ -182,7 +255,38 @@ export default function DailyClosePage() {
     }
   };
 
+  const handleEdit = (entry: DailyEntry) => {
+    setEditingId(entry.id);
+    setSavedSummary(null);
+    const entryDate = toDate(entry.date) ?? new Date();
+    reset({
+      vehicleId: entry.vehicleId,
+      date: entryDate,
+      earnings: entry.earnings,
+      kilometers: entry.kilometers,
+      fuelAmount: entry.fuelAmount,
+      fuelCost: entry.fuelCost,
+      expenses: entry.expenses,
+      hoursWorked: entry.hoursWorked ?? undefined,
+      appsUsed: Array.isArray(entry.appsUsed) ? entry.appsUsed : [],
+      notes: entry.notes ?? "",
+    });
+  };
+
+  const handleDelete = async (entry: DailyEntry) => {
+    const entryDate = toDate(entry.date);
+    const label = entryDate ? format(entryDate, "d/M/yy") : "desconocido";
+    if (!window.confirm(`¿Eliminar cierre del ${label}?`)) return;
+    try {
+      await remove(entry.id);
+      toast.success("Cierre eliminado");
+    } catch {
+      toast.error("Error al eliminar");
+    }
+  };
+
   const handleReset = () => {
+    setEditingId(null);
     setSavedSummary(null);
     reset({
       vehicleId: activeVehicle?.id ?? "",
@@ -384,7 +488,10 @@ export default function DailyClosePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            onSubmit={handleSubmit(onSubmit)}
+            onSubmit={handleSubmit(onSubmit, (errs) => {
+              const msgs = Object.entries(errs).map(([k, v]) => `${k}: ${(v as {message?: string})?.message || "inválido"}`);
+              toast.error(msgs.join(" | "));
+            })}
           >
             {saving ? (
               <motion.div
@@ -441,6 +548,7 @@ export default function DailyClosePage() {
                     placeholder="0"
                     icon={<Fuel className="h-4 w-4" />}
                     className="focus-ring"
+                    error={errors.fuelAmount?.message}
                     {...register("fuelAmount", { valueAsNumber: true })}
                   />
                   <Input
@@ -450,6 +558,7 @@ export default function DailyClosePage() {
                     placeholder="0"
                     icon={<DollarSign className="h-4 w-4" />}
                     className="focus-ring"
+                    error={errors.fuelCost?.message}
                     {...register("fuelCost", { valueAsNumber: true })}
                   />
                 </motion.div>
@@ -475,6 +584,7 @@ export default function DailyClosePage() {
                     placeholder="Opcional"
                     icon={<Clock className="h-4 w-4" />}
                     className="focus-ring"
+                    error={errors.hoursWorked?.message as string | undefined}
                     {...register("hoursWorked", { valueAsNumber: true })}
                   />
                 </motion.div>
@@ -517,6 +627,31 @@ export default function DailyClosePage() {
                   />
                 </motion.div>
 
+                {watchedApps?.length >= 2 && (
+                  <motion.div variants={sectionSlideUp} className="space-y-3">
+                    <label className="block text-xs font-medium uppercase tracking-wider text-secondary-color">
+                      Ganancias por aplicación
+                    </label>
+                    <div className="space-y-2">
+                      {watchedApps.map((app) => {
+                        const fieldName = `earningsByApp.${app}` as const;
+                        return (
+                          <Input
+                            key={app}
+                            label={app}
+                            type="number"
+                            step="100"
+                            placeholder="0"
+                            icon={<DollarSign className="h-4 w-4" />}
+                            value={watch(fieldName) ?? ""}
+                            onChange={(e) => setValue(fieldName, e.target.value === "" ? undefined : parseFloat(e.target.value) || 0)}
+                          />
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                )}
+
                 <motion.div variants={sectionSlideUp} className="space-y-3">
                   <label className="block text-xs font-medium uppercase tracking-wider text-secondary-color">
                     Notas
@@ -540,7 +675,7 @@ export default function DailyClosePage() {
                         key={`${watchedEarnings}-${watchedExpenses}-${watchedFuelCost}`}
                         initial={{ scale: 0.9, opacity: 0.5 }}
                         animate={{ scale: 1, opacity: 1 }}
-                        transition={{ duration: 0.3 }}
+                        transition={{ duration: 0.4 }}
                         className={cn(
                           "text-lg font-bold",
                           watchedEarnings - watchedExpenses - watchedFuelCost >= 0
@@ -563,15 +698,115 @@ export default function DailyClosePage() {
                     size="lg"
                     loading={saving}
                   >
-                    Guardar cierre del día
+                    {editingId ? "Actualizar cierre" : "Guardar cierre del día"}
                     <ArrowRight className="h-4 w-4" />
                   </Button>
+                  {editingId && (
+                    <button
+                      type="button"
+                      onClick={() => handleReset()}
+                      className="mt-2 w-full text-center text-xs text-secondary-color underline underline-offset-2"
+                    >
+                      Cancelar edición
+                    </button>
+                  )}
                 </motion.div>
               </motion.div>
             )}
           </motion.form>
         )}
       </AnimatePresence>
+
+      {entries.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="space-y-3 pt-4"
+        >
+          <h3 className="text-sm font-semibold text-primary-color">Cierres anteriores</h3>
+          <div className="space-y-2">
+            {(() => {
+              const safe = entries.map((e) => ({ entry: e, date: toDate(e.date) }));
+              return safe
+                .filter((s): s is typeof s & { date: Date } => s.date !== null)
+                .sort((a, b) => b.date.getTime() - a.date.getTime())
+                .slice(0, 30)
+                .map(({ entry, date: entryDate }) => {
+                  const net = entry.earnings - entry.expenses - entry.fuelCost;
+                  const isToday =
+                    format(entryDate, "yyyy-MM-dd") === format(new Date(), "yyyy-MM-dd");
+                  const apps = Array.isArray(entry.appsUsed) ? entry.appsUsed : [];
+                  return (
+                    <motion.div
+                      key={entry.id}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      whileHover={{ scale: 1.01 }}
+                      className="group relative"
+                    >
+                      <Card padding="sm">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium text-primary-color">
+                                {isToday
+                                  ? "Hoy"
+                                  : format(entryDate, "d MMM", { locale: es })}
+                              </span>
+                              <span className="text-xs text-secondary-color">
+                                {format(entryDate, "HH:mm")}
+                              </span>
+                              {apps.length > 0 && (
+                                <span className="truncate text-xs text-secondary-color">
+                                  {apps.join(", ")}
+                                </span>
+                              )}
+                            </div>
+                            <div className="mt-1 flex items-center gap-3 text-xs">
+                              <span className="text-success-400">
+                                {formatCurrency(entry.earnings)}
+                              </span>
+                              <span className="text-secondary-color">
+                                {formatNumber(entry.kilometers)} km
+                              </span>
+                              <span
+                                className={cn(
+                                  "font-medium",
+                                  net >= 0 ? "text-success-400" : "text-danger-400",
+                                )}
+                              >
+                                {formatCurrency(net)}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex shrink-0 gap-1">
+                            <button
+                              type="button"
+                              onClick={() => handleEdit(entry)}
+                              className="flex h-8 w-8 items-center justify-center rounded-full text-secondary-color transition-colors hover:bg-hover hover:text-primary-color"
+                              title="Editar"
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDelete(entry)}
+                              className="flex h-8 w-8 items-center justify-center rounded-full text-secondary-color transition-colors hover:bg-danger-500/10 hover:text-danger-400"
+                              title="Eliminar"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      </Card>
+                    </motion.div>
+                  );
+                });
+            })()}
+          </div>
+        </motion.div>
+      )}
     </div>
   );
 }

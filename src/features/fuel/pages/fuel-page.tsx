@@ -21,11 +21,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardValue } from "@/components/ui/card";
 import { Modal } from "@/components/ui/modal";
+import { DatePicker } from "@/components/ui/date-picker";
 import { fuelRecordSchema, type FuelRecordFormData } from "@/lib/schemas";
 import { useFuel } from "@/hooks/use-fuel";
 import { useVehicles } from "@/hooks/use-vehicles";
 import { fuelRepository } from "@/database/repositories/fuel-repository";
-import { cn, formatCurrency, formatNumber } from "@/lib/utils";
+import { cn, formatCurrency, formatNumber, toDate } from "@/lib/utils";
 import { playCoin, playDelete } from "@/lib/sounds";
 import type { FuelRecord } from "@/types";
 
@@ -75,7 +76,7 @@ const cardVariants = {
       delay: i * 0.05,
     },
   }),
-  exit: { opacity: 0, x: -80, transition: { duration: 0.2 } },
+  exit: { opacity: 0, x: -80, transition: { duration: 0.3 } },
 };
 
 const sectionVariants = {
@@ -94,6 +95,7 @@ export default function FuelPage() {
   );
   const [sheetOpen, setSheetOpen] = useState(false);
   const [consumption, setConsumption] = useState(0);
+  const [consumptionLabel, setConsumptionLabel] = useState("");
   const [monthlyCost, setMonthlyCost] = useState(0);
   const [deletingRecord, setDeletingRecord] = useState<FuelRecord | null>(null);
   const [activeTab, setActiveTab] = useState<"all" | "full" | "partial">("all");
@@ -103,6 +105,8 @@ export default function FuelPage() {
       if (!activeVehicle) return;
       const c = await getConsumption();
       setConsumption(c);
+      const fullCount = records.filter((r) => r.isFull).length;
+      setConsumptionLabel(fullCount >= 2 ? "tanque lleno" : "mixto");
       const now = new Date();
       const start = new Date(now.getFullYear(), now.getMonth(), 1);
       const cost = await fuelRepository.getMonthlyCost(
@@ -141,7 +145,7 @@ export default function FuelPage() {
             <motion.div
               initial={{ scale: 0, rotate: -20 }}
               animate={{ scale: 1, rotate: 0 }}
-              transition={{ type: "spring" as const, stiffness: 400, damping: 12, delay: 0.1 }}
+              transition={{ type: "spring" as const, stiffness: 280, damping: 20, delay: 0.1 }}
             >
               <Fuel className="mx-auto mb-3 h-12 w-12 text-muted-color" />
             </motion.div>
@@ -198,6 +202,9 @@ export default function FuelPage() {
                 "-- km/l"
               )}
             </CardValue>
+            {consumption > 0 && consumptionLabel && (
+              <p className="mt-1 text-[10px] text-secondary-color/60">{consumptionLabel}</p>
+            )}
           </Card>
         </motion.div>
 
@@ -230,7 +237,7 @@ export default function FuelPage() {
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              transition={{ type: "spring" as const, stiffness: 500, damping: 12, delay: 0.15 }}
+              transition={{ type: "spring" as const, stiffness: 280, damping: 20, delay: 0.15 }}
             >
               <Droplets className="mx-auto mb-3 h-10 w-10 text-muted-color" />
             </motion.div>
@@ -269,7 +276,7 @@ export default function FuelPage() {
                   <motion.div
                     layoutId="fuel-tab-indicator"
                     className="absolute inset-0 rounded-full bg-white/10"
-                    transition={{ type: "spring" as const, stiffness: 400, damping: 30 }}
+                    transition={{ type: "spring" as const, stiffness: 280, damping: 24 }}
                   />
                 )}
                 <span className="relative z-10">
@@ -334,11 +341,12 @@ export default function FuelPage() {
                         </span>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <Calendar className="h-3.5 w-3.5 text-secondary-color" />
+                          <Calendar className="h-3.5 w-3.5 text-secondary-color" />
                         <span className="text-xs text-secondary-color">
-                          {format(new Date(record.date), "d MMM, yyyy", {
-                            locale: es,
-                          })}
+                          {(() => {
+                            const d = toDate(record.date);
+                            return d ? format(d, "d MMM, yyyy", { locale: es }) : "--";
+                          })()}
                         </span>
                       </div>
                     </div>
@@ -387,7 +395,7 @@ export default function FuelPage() {
                 initial={{ scale: 0.85, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.85, opacity: 0 }}
-                transition={{ type: "spring" as const, stiffness: 400, damping: 25 }}
+                transition={{ type: "spring" as const, stiffness: 280, damping: 24 }}
               >
                 <p className="text-sm text-secondary-color">
                   ¿Eliminar el registro de{" "}
@@ -445,6 +453,7 @@ function FuelFormSheet({
     handleSubmit,
     watch,
     control,
+    setValue,
     formState: { errors },
     reset,
   } = useForm<FuelRecordFormData>({
@@ -488,12 +497,22 @@ function FuelFormSheet({
       title="Registrar tanqueo"
     >
       <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-2">
-        <Input
-          label="Fecha"
-          type="date"
-          error={errors.date?.message}
-          {...register("date", { valueAsDate: true })}
-        />
+        <div>
+          <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-white/45">
+            Fecha
+          </label>
+          <Controller
+            control={control}
+            name="date"
+            render={({ field }) => (
+              <DatePicker
+                value={field.value}
+                onChange={(d) => setValue("date", d)}
+                error={errors.date?.message}
+              />
+            )}
+          />
+        </div>
 
         <div className="grid grid-cols-2 gap-2">
           <Input

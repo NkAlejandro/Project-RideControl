@@ -64,10 +64,10 @@ interface WalletConfig {
 }
 
 const defaultWallets: WalletConfig[] = [
-  { name: "Moto", type: "vehicle", percentage: 50, color: "#3b82f6", icon: "bike" },
-  { name: "Ahorro", type: "savings", percentage: 20, color: "#22c55e", icon: "piggy-bank" },
-  { name: "Inversiones", type: "investment", percentage: 15, color: "#f59e0b", icon: "trending-up" },
-  { name: "Personal", type: "personal", percentage: 15, color: "#ef4444", icon: "smile" },
+  { name: "Moto", type: "moto", percentage: 30, color: "#3b82f6", icon: "bike" },
+  { name: "Ahorro", type: "ahorro", percentage: 40, color: "#22c55e", icon: "piggy-bank" },
+  { name: "Inversiones", type: "inversiones", percentage: 20, color: "#f59e0b", icon: "trending-up" },
+  { name: "Personales", type: "personales", percentage: 10, color: "#ef4444", icon: "smile" },
 ];
 
 const steps = [
@@ -232,6 +232,7 @@ export default function OnboardingPage() {
       theme: "dark",
       walletDistribution,
       onboardingCompleted: false,
+      dailyGoal: 100000,
     });
     pushSync();
     setSettings(settings);
@@ -293,14 +294,14 @@ export default function OnboardingPage() {
             initial={{ scale: 0, rotate: -180 }}
             animate={{ scale: 1, rotate: 0 }}
             transition={{ delay: 0.2, type: "spring", stiffness: 150, damping: 15 }}
-            className="mx-auto mb-8 flex h-20 w-20 items-center justify-center rounded-full bg-white"
+            className="mx-auto mb-8 flex h-20 w-20 items-center justify-center rounded-full bg-primary-500"
           >
             <motion.div
               initial={{ pathLength: 0 }}
               animate={{ pathLength: 1 }}
               transition={{ delay: 0.5, duration: 0.4 }}
             >
-              <Check className="h-10 w-10 text-black" strokeWidth={3} />
+              <Check className="h-10 w-10 text-on-primary" strokeWidth={3} />
             </motion.div>
           </motion.div>
           <motion.h1
@@ -370,7 +371,7 @@ export default function OnboardingPage() {
                     i < currentStep
                       ? "h-1.5 w-1.5 bg-white"
                       : i === currentStep
-                        ? "h-6 w-6 bg-white text-black"
+                        ? "h-6 w-6 bg-primary-500 text-on-primary"
                         : "h-1.5 w-1.5 bg-surface-400"
                   )}
                   animate={
@@ -526,7 +527,7 @@ export default function OnboardingPage() {
                               className={cn(
                                 "rounded-2xl border px-2 py-2.5 text-xs font-medium transition-colors duration-300",
                                 isSelected
-                                  ? "border-white/20 bg-white text-black"
+                                  ? "border-primary-500 bg-primary-500 text-on-primary"
                                   : "border-theme-subtle bg-card text-secondary-color hover:border-theme-medium hover:text-primary-color"
                               )}
                             >

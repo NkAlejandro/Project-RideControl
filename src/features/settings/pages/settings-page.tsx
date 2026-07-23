@@ -54,7 +54,7 @@ const sectionVariants = {
   visible: (i: number) => ({
     opacity: 1,
     y: 0,
-    transition: { delay: i * 0.08, type: "spring" as const, stiffness: 100, damping: 14 },
+    transition: { delay: i * 0.08, type: "spring" as const, stiffness: 280, damping: 24 },
   }),
 };
 
@@ -205,6 +205,9 @@ export default function SettingsPage() {
         wallets: await db.wallets.toArray(),
         goals: await db.goals.toArray(),
         settings: await db.settings.toArray(),
+        transactions: await db.transactions.toArray(),
+        budgets: await db.budgets.toArray(),
+        distributionHistory: await db.distributionHistory.toArray(),
       };
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
@@ -237,6 +240,9 @@ export default function SettingsPage() {
         if (data.wallets) await db.wallets.bulkPut(data.wallets);
         if (data.goals) await db.goals.bulkPut(data.goals);
         if (data.settings) await db.settings.bulkPut(data.settings);
+        if (data.transactions) await db.transactions.bulkPut(data.transactions);
+        if (data.budgets) await db.budgets.bulkPut(data.budgets);
+        if (data.distributionHistory) await db.distributionHistory.bulkPut(data.distributionHistory);
         pushSync();
         toast.success("Datos importados correctamente. Recarga la página.");
       } catch {
@@ -257,6 +263,9 @@ export default function SettingsPage() {
       await db.wallets.clear();
       await db.goals.clear();
       await db.settings.clear();
+      await db.transactions.clear();
+      await db.budgets.clear();
+      await db.distributionHistory.clear();
       pushSync();
       localStorage.removeItem("ridecontrol-storage");
       toast.success("Todos los datos han sido eliminados. Recarga la página.");
@@ -456,12 +465,12 @@ export default function SettingsPage() {
                 "relative h-7 w-12 rounded-full transition-colors",
                 notificationsEnabled
                   ? "bg-primary-500"
-                  : "bg-white/[0.1]",
+                  : "bg-hover",
               )}
             >
               <motion.div
                 animate={{ x: notificationsEnabled ? 20 : 2 }}
-                transition={{ type: "spring", stiffness: 500, damping: 25 }}
+                transition={{ type: "spring", stiffness: 280, damping: 24 }}
                 className="absolute top-0.5 left-0.5 h-6 w-6 rounded-full bg-white shadow-md"
               />
             </motion.button>
@@ -504,12 +513,12 @@ export default function SettingsPage() {
                 "relative h-7 w-12 rounded-full transition-colors",
                 soundsEnabled
                   ? "bg-primary-500"
-                  : "bg-white/[0.1]",
+                  : "bg-hover",
               )}
             >
               <motion.div
                 animate={{ x: soundsEnabled ? 20 : 2 }}
-                transition={{ type: "spring", stiffness: 500, damping: 25 }}
+                transition={{ type: "spring", stiffness: 280, damping: 24 }}
                 className="absolute top-0.5 left-0.5 h-6 w-6 rounded-full bg-white shadow-md"
               />
             </motion.button>
@@ -677,7 +686,7 @@ export default function SettingsPage() {
             <motion.form
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ type: "spring" as const, stiffness: 150, damping: 15 }}
+              transition={{ type: "spring" as const, stiffness: 280, damping: 24 }}
               onSubmit={handleSubmit(handleProfileSubmit)}
               className="space-y-4"
             >
@@ -735,7 +744,7 @@ export default function SettingsPage() {
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ type: "spring" as const, stiffness: 150, damping: 15 }}
+              transition={{ type: "spring" as const, stiffness: 280, damping: 24 }}
               className="space-y-4"
             >
               <p className="text-sm text-secondary-color">

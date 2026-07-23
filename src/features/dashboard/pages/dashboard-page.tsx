@@ -2,33 +2,36 @@ import { useNavigate } from "react-router-dom";
 import { motion, useSpring, useTransform, useMotionValue } from "framer-motion";
 import { Card, CardHeader, CardTitle, CardValue } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useVehicles } from "@/hooks/use-vehicles";
 import { useDailyEntries } from "@/hooks/use-daily-entries";
 import { useWallets } from "@/hooks/use-wallets";
 import { useSettings } from "@/hooks/use-settings";
+import { useDistributions } from "@/hooks/use-distributions";
 import { maintenanceRepository } from "@/database/repositories/maintenance-repository";
-import { formatCurrency } from "@/lib/utils";
+import { settingsRepository } from "@/database/repositories/settings-repository";
+import { useAppStore } from "@/store/use-app-store";
+import { formatCurrency, formatNumber } from "@/lib/utils";
+import { FinanceEngine } from "@/lib/finance-engine";
+import { toast } from "sonner";
 import {
   TrendingUp,
-  Target,
   Bike,
-  HeartPulse,
   Wrench,
-  Wallet,
   List,
   ArrowRight,
   Sparkles,
   Plus,
+  Pencil,
+  Trash2,
+  Check,
+  X,
+  Coins,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import type { MaintenanceItem } from "@/types";
+import type { MaintenanceItem, DailyEntry } from "@/types";
 
-const COLORS: Record<string, string> = {
-  bike: "#3b82f6",
-  "piggy-bank": "#22c55e",
-  "trending-up": "#f59e0b",
-  smile: "#ef4444",
-};
+
 
 function AnimatedNumber({ value, format = true }: { value: number; format?: boolean }) {
   const motionVal = useMotionValue(0);
@@ -84,7 +87,7 @@ const listItem = {
   show: (i: number) => ({
     opacity: 1,
     x: 0,
-    transition: { duration: 0.4, delay: i * 0.07, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
+    transition: { duration: 0.45, delay: i * 0.07, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
   }),
 };
 
@@ -102,9 +105,15 @@ const chartSection = {
 export default function DashboardPage() {
   const navigate = useNavigate();
   const { activeVehicle, loading: vehicleLoading } = useVehicles();
-  const { todayEntry, entries, loading: entriesLoading } = useDailyEntries(activeVehicle?.id);
+  const { todayEntry, entries, loading: entriesLoading, remove } = useDailyEntries(activeVehicle?.id);
   const { wallets, loading: walletsLoading } = useWallets();
   const { settings } = useSettings();
+  const { distributions } = useDistributions();
+  const [editingGoal, setEditingGoal] = useState(false);
+  const [goalInput, setGoalInput] = useState("");
+  const [dailyGoalOverride, setDailyGoalOverride] = useState<number | null>(
+    () => { const s = localStorage.getItem("rc-daily-goal"); return s ? Number(s) : null; }
+  );
   const [upcomingMaintenance, setUpcomingMaintenance] = useState<
     (MaintenanceItem & { kmRemaining: number; daysRemaining: number }) | null
   >(null);
@@ -197,23 +206,45 @@ export default function DashboardPage() {
   }
 
   const todayEarnings = todayEntry?.earnings || 0;
-  const dailyGoal = settings?.walletDistribution ? 100000 : 100000;
+  const dailyGoal = dailyGoalOverride ?? settings?.dailyGoal ?? 100000;
   const goalProgress = dailyGoal > 0 ? Math.min((todayEarnings / dailyGoal) * 100, 100) : 0;
 
   const vehicleHealth = upcomingMaintenance && upcomingMaintenance.kmRemaining <= 500
     ? { label: "Atención", color: "text-warning-400" as const }
     : { label: "Bien", color: "text-success-400" as const };
 
-  const savingsWallets = wallets.filter((w) => w.type === "savings" || w.type === "investment");
+  const savingsWallets = wallets.filter((w) => w.type === "ahorro" || w.type === "inversiones");
   const totalSavings = savingsWallets.reduce((acc, w) => acc + w.balance, 0);
   const financialHealth =
     todayEarnings > 0
       ? Math.round((totalSavings / (todayEarnings + (todayEntry?.expenses || 0) || 1)) * 100)
       : 0;
 
+  const totalPatrimonio = wallets.reduce((s, w) => s + w.balance, 0);
+  void distributions;
+  const netToday = todayEntry
+    ? FinanceEngine.calculateNetIncome(todayEntry.earnings, todayEntry.fuelCost, todayEntry.expenses)
+    : 0;
+
   const recentEntries = [...entries]
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 5);
+
+  const handleEditEntry = (entry: DailyEntry) => {
+    navigate("/daily-close", { state: { editEntryId: entry.id } });
+  };
+
+  const handleDeleteEntry = async (entry: DailyEntry) => {
+    const d = new Date(entry.date as unknown as string | number);
+    const label = isNaN(d.getTime()) ? "desconocido" : new Intl.DateTimeFormat("es-CO", { day: "numeric", month: "short" }).format(d);
+    if (!window.confirm(`¿Eliminar cierre del ${label}?`)) return;
+    try {
+      await remove(entry.id);
+      toast.success("Cierre eliminado");
+    } catch {
+      toast.error("Error al eliminar");
+    }
+  };
 
   return (
     <motion.div
@@ -246,6 +277,7 @@ export default function DashboardPage() {
           {todayEntry && (
             <p className="mt-1 text-xs text-secondary-color">
               {todayEntry.kilometers} km recorridos
+              {netToday > 0 && ` · neto ${formatCurrency(netToday)}`}
             </p>
           )}
         </motion.div>
@@ -253,24 +285,77 @@ export default function DashboardPage() {
         <motion.div variants={cardGlow} whileHover={{ y: -3, boxShadow: "0 0 24px rgba(79,110,255,0.15)" }} className="rounded-3xl border border-theme-subtle bg-card p-5 hover-lift">
           <CardHeader>
             <CardTitle>Meta diaria</CardTitle>
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-hover icon-bounce">
-              <Target className="h-4 w-4 text-primary-400" />
-            </div>
+            <button
+              type="button"
+              onClick={() => { setGoalInput(String(dailyGoal)); setEditingGoal(true); }}
+              className="flex h-8 w-8 items-center justify-center rounded-xl bg-hover icon-bounce transition-colors hover:bg-primary-500/10"
+              title="Editar meta"
+            >
+              <Pencil className="h-4 w-4 text-primary-400" />
+            </button>
           </CardHeader>
-          <CardValue>
-            <AnimatedNumber value={dailyGoal} />
-          </CardValue>
-          <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-hover">
-            <motion.div
-              className="h-full rounded-full bg-white"
-              initial={{ width: 0 }}
-              animate={{ width: `${goalProgress}%` }}
-              transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.3 }}
-            />
-          </div>
-          <p className="mt-2 text-xs text-secondary-color">
-            <AnimatedPercent value={goalProgress} /> de la meta
-          </p>
+          {editingGoal ? (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  inputMode="numeric"
+                  value={goalInput}
+                  onChange={(e) => setGoalInput(e.target.value)}
+                  className="text-lg font-bold"
+                  autoFocus
+                />
+              </div>
+              <div className="flex gap-1">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const val = Number(goalInput);
+                    if (isNaN(val) || val <= 0) return toast.error("Valor inválido");
+                    localStorage.setItem("rc-daily-goal", String(val));
+                    setDailyGoalOverride(val);
+                    setEditingGoal(false);
+                    const profile = useAppStore.getState().profile;
+                    if (profile) {
+                      const s = await settingsRepository.get(profile.id);
+                      if (s) {
+                        try { await settingsRepository.update(s.id, { dailyGoal: val }); } catch {}
+                      }
+                    }
+                  }}
+                  className="flex h-7 flex-1 items-center justify-center gap-1 rounded-lg bg-primary-500/10 text-xs font-medium text-primary-400 transition-colors hover:bg-primary-500/20"
+                >
+                  <Check className="h-3.5 w-3.5" />
+                  Guardar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditingGoal(false)}
+                  className="flex h-7 flex-1 items-center justify-center gap-1 rounded-lg bg-hover text-xs font-medium text-secondary-color transition-colors hover:bg-danger-500/10 hover:text-danger-400"
+                >
+                  <X className="h-3.5 w-3.5" />
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <CardValue>
+                <AnimatedNumber value={dailyGoal} />
+              </CardValue>
+              <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-hover">
+                <motion.div
+                  className="h-full rounded-full bg-white"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${goalProgress}%` }}
+                  transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.3 }}
+                />
+              </div>
+              <p className="mt-2 text-xs text-secondary-color">
+                <AnimatedPercent value={goalProgress} /> de la meta
+              </p>
+            </>
+          )}
         </motion.div>
 
         <motion.div variants={cardGlow} whileHover={{ y: -3, boxShadow: "0 0 24px rgba(245,158,11,0.15)" }} className="rounded-3xl border border-theme-subtle bg-card p-5 hover-lift">
@@ -290,29 +375,24 @@ export default function DashboardPage() {
           )}
         </motion.div>
 
-        <motion.div variants={cardGlow} whileHover={{ y: -3, boxShadow: "0 0 24px rgba(239,68,68,0.15)" }} className="rounded-3xl border border-theme-subtle bg-card p-5 hover-lift">
+        <motion.div variants={cardGlow} whileHover={{ y: -3, boxShadow: "0 0 24px rgba(79,110,255,0.15)" }} className="rounded-3xl border border-theme-subtle bg-card p-5 hover-lift">
           <CardHeader>
-            <CardTitle>Salud financiera</CardTitle>
+            <CardTitle>Patrimonio</CardTitle>
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-hover icon-bounce">
-              <HeartPulse className="h-4 w-4 text-danger-400" />
+              <Coins className="h-4 w-4 text-primary-400" />
             </div>
           </CardHeader>
-          <CardValue
-            className={
-              financialHealth >= 20
-                ? "text-success-400"
-                : financialHealth > 0
-                  ? "text-warning-400"
-                  : "text-secondary-color"
-            }
-          >
-            <AnimatedPercent value={financialHealth} />
+          <CardValue className="text-primary-400">
+            <AnimatedNumber value={totalPatrimonio} />
           </CardValue>
-          <p className="mt-1 text-xs text-secondary-color">
-            {totalSavings > 0
-              ? `${formatCurrency(totalSavings)} ahorrados`
-              : "Sin ahorros aún"}
-          </p>
+          {totalSavings > 0 && (
+            <p className="mt-1 text-xs text-secondary-color">
+              {formatCurrency(totalSavings)} ahorrados · {financialHealth}% tasa
+            </p>
+          )}
+          {totalSavings === 0 && (
+            <p className="mt-1 text-xs text-secondary-color">Sin ahorros aún</p>
+          )}
         </motion.div>
       </motion.div>
 
@@ -349,55 +429,7 @@ export default function DashboardPage() {
           </motion.div>
         )}
 
-        {wallets.length > 0 && (
-          <motion.div
-            variants={chartSection}
-            whileHover={{ scale: 1.01 }}
-            className="rounded-3xl border border-theme-subtle bg-card p-5"
-          >
-            <CardHeader>
-              <CardTitle>Distribución automática</CardTitle>
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-hover icon-bounce">
-                <Wallet className="h-4 w-4 text-primary-400" />
-              </div>
-            </CardHeader>
-            <div className="mb-4 flex h-2 overflow-hidden rounded-full bg-hover">
-              {wallets.map((w, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ width: 0 }}
-                  animate={{ width: `${w.percentage}%` }}
-                  transition={{ duration: 0.8, delay: 0.2 + i * 0.1, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}
-                  style={{ backgroundColor: COLORS[w.icon] || "#3b82f6" }}
-                />
-              ))}
-            </div>
-            <div className="space-y-2.5">
-              {wallets.map((w, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.4, delay: 0.3 + i * 0.08 }}
-                  className="flex items-center justify-between text-sm"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <div
-                      className="h-2 w-2 rounded-full"
-                      style={{ backgroundColor: COLORS[w.icon] || "#3b82f6" }}
-                    />
-                    <span className="text-secondary-color">{w.name}</span>
-                  </div>
-                  <span className="text-primary-color">
-                    <AnimatedNumber value={w.balance} />
-                  </span>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        )}
-
-        {!upcomingMaintenance && wallets.length === 0 && (
+        {!upcomingMaintenance && (
           <Card className="py-8 text-center">
             <p className="text-sm text-secondary-color">
               Registra tu primer cierre del día para ver más datos aquí
@@ -429,26 +461,53 @@ export default function DashboardPage() {
                 variants={listItem}
                 initial="hidden"
                 animate="show"
-                className="flex items-center justify-between px-5 py-4"
+                className="flex items-center justify-between gap-2 px-5 py-4"
               >
-                <div>
+                <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium text-primary-color">
                     {formatCurrency(entry.earnings)}
                   </p>
                   <p className="mt-0.5 text-xs text-secondary-color">
-                    {entry.kilometers} km · {entry.fuelAmount}L
+                    {entry.kilometers} km · {entry.fuelAmount}L · {formatNumber(entry.expenses)} gastos
                   </p>
                 </div>
-                <div className="text-right">
-                  <p className="text-xs text-secondary-color">
-                    -{formatCurrency(entry.expenses)}
-                  </p>
-                  <p className="mt-0.5 text-xs text-secondary-color">
-                    {new Intl.DateTimeFormat("es-CO", {
-                      day: "numeric",
-                      month: "short",
-                    }).format(new Date(entry.date))}
-                  </p>
+                <div className="flex items-center gap-3">
+                  <div className="text-right">
+                    <p className="text-xs text-secondary-color">
+                      -{formatCurrency(entry.expenses)}
+                    </p>
+                    <p className="mt-0.5 text-xs text-secondary-color">
+                      {(() => {
+                        try {
+                          const d = new Date(entry.date as unknown as string | number);
+                          return isNaN(d.getTime())
+                            ? ""
+                            : new Intl.DateTimeFormat("es-CO", {
+                                day: "numeric",
+                                month: "short",
+                              }).format(d);
+                        } catch { return ""; }
+                      })()}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 gap-0.5">
+                    <button
+                      type="button"
+                      onClick={() => handleEditEntry(entry)}
+                      className="flex h-7 w-7 items-center justify-center rounded-full text-secondary-color transition-colors hover:bg-hover hover:text-primary-color"
+                      title="Editar"
+                    >
+                      <Pencil className="h-3 w-3" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteEntry(entry)}
+                      className="flex h-7 w-7 items-center justify-center rounded-full text-secondary-color transition-colors hover:bg-danger-500/10 hover:text-danger-400"
+                      title="Eliminar"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </div>
                 </div>
               </motion.div>
             ))}

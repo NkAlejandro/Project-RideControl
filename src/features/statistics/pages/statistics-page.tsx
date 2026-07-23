@@ -243,7 +243,7 @@ function EmptyChart({ message }: { message: string }) {
     <motion.div
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
-      transition={{ type: "spring" as const, stiffness: 120, damping: 12 }}
+      transition={{ type: "spring" as const, stiffness: 280, damping: 24 }}
       className="flex h-64 items-center justify-center"
     >
       <motion.p
@@ -276,7 +276,7 @@ function StatCard({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay, type: "spring" as const, stiffness: 100, damping: 14 }}
+      transition={{ delay, type: "spring" as const, stiffness: 280, damping: 24 }}
       whileHover={{ y: -2 }}
     >
       <Card className={cn(isBest && "shadow-lg shadow-primary-500/20")}>
@@ -373,14 +373,14 @@ export default function StatisticsPage() {
             className={cn(
               "relative z-10 rounded-full px-4 py-1.5 text-xs font-medium transition-colors duration-200",
               period === p.key
-                ? "text-black"
+                ? "text-on-primary"
                 : "text-secondary-color hover:text-primary-color"
             )}
           >
             {period === p.key && (
               <motion.div
                 layoutId="period-tab"
-                className="absolute inset-0 rounded-full bg-white"
+                className="absolute inset-0 rounded-full bg-primary-500"
                 transition={{ type: "spring" as const, stiffness: 300, damping: 25 }}
               />
             )}
@@ -395,7 +395,7 @@ export default function StatisticsPage() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.2 }}
+          transition={{ duration: 0.35 }}
           className="space-y-6"
         >
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">

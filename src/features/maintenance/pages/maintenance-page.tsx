@@ -131,7 +131,7 @@ const cardVariants = {
       delay: i * 0.04,
     },
   }),
-  exit: { opacity: 0, scale: 0.95, transition: { duration: 0.15 } },
+  exit: { opacity: 0, scale: 0.95, transition: { duration: 0.3 } },
 };
 
 const fieldVariants = {
@@ -286,7 +286,7 @@ export default function MaintenancePage() {
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                transition={{ type: "spring" as const, stiffness: 500, damping: 12, delay: 0.1 }}
+                transition={{ type: "spring" as const, stiffness: 280, damping: 20, delay: 0.1 }}
               >
                 <AlertTriangle className="h-5 w-5 text-warning-400" />
               </motion.div>
@@ -549,7 +549,7 @@ export default function MaintenancePage() {
             <motion.div
               initial={{ scale: 0, rotate: -30 }}
               animate={{ scale: 1, rotate: 0 }}
-              transition={{ type: "spring" as const, stiffness: 400, damping: 12, delay: 0.1 }}
+              transition={{ type: "spring" as const, stiffness: 280, damping: 20, delay: 0.1 }}
             >
               <Wrench className="mx-auto mb-3 h-12 w-12 text-muted-color" />
             </motion.div>
@@ -626,7 +626,7 @@ export default function MaintenancePage() {
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
-                transition={{ type: "spring" as const, stiffness: 400, damping: 25 }}
+                transition={{ type: "spring" as const, stiffness: 280, damping: 24 }}
               >
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                   <input type="hidden" {...register("vehicleId")} />

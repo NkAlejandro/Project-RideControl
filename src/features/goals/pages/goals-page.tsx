@@ -344,7 +344,7 @@ export default function GoalsPage() {
                           transition={{
                             delay: 0.15 + idx * 0.1,
                             duration: 0.8,
-                            ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number],
+                            ease: [0.16, 1, 0.3, 1] as [number, number, number, number],
                           }}
                           className={cn(
                             "h-full rounded-full progress-animated",
@@ -569,7 +569,7 @@ export default function GoalsPage() {
                       className="h-full rounded-full bg-primary-500 progress-animated"
                       initial={{ width: 0 }}
                       animate={{ width: `${stats.percentage}%` }}
-                      transition={{ duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] }}
+                      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}
                     />
                   </div>
                 </div>
