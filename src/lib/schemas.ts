@@ -17,16 +17,19 @@ export const vehicleSchema = z.object({
   isActive: z.boolean().default(true),
 });
 
+const numOrZero = () => z.number().catch(0).pipe(z.number().min(0));
+
 export const dailyEntrySchema = z.object({
   vehicleId: z.string().min(1),
   date: z.date(),
-  earnings: z.number().min(0, "Los ingresos no pueden ser negativos"),
-  kilometers: z.number().min(0, "Los km no pueden ser negativos"),
-  fuelAmount: z.number().min(0).default(0),
-  fuelCost: z.number().min(0).default(0),
-  expenses: z.number().min(0, "Los gastos no pueden ser negativos").default(0),
-  hoursWorked: z.number().min(0).optional(),
+  earnings: numOrZero(),
+  kilometers: numOrZero(),
+  fuelAmount: numOrZero(),
+  fuelCost: numOrZero(),
+  expenses: numOrZero(),
+  hoursWorked: z.preprocess((v) => (typeof v === "number" && isNaN(v) ? undefined : v), z.number().min(0).optional()),
   appsUsed: z.array(z.string()).default([]),
+  earningsByApp: z.record(z.string(), z.number()).optional(),
   notes: z.string().optional(),
 });
 
@@ -91,6 +94,28 @@ export const settingsSchema = z.object({
   onboardingCompleted: z.boolean().default(false),
 });
 
+export const transactionSchema = z.object({
+  type: z.enum(["income", "expense"]),
+  category: z.enum([
+    "trabajo", "inversiones", "otros_ingresos",
+    "comida", "transporte", "vivienda", "servicios",
+    "entretenimiento", "salud", "educacion", "compras",
+    "suscripciones", "otros_gastos",
+  ]),
+  amount: z.number().min(0.01, "El monto debe ser mayor a 0"),
+  date: z.date(),
+  description: z.string().min(1, "La descripción es requerida"),
+});
+
+export const budgetSchema = z.object({
+  category: z.enum([
+    "comida", "transporte", "vivienda", "servicios",
+    "entretenimiento", "salud", "educacion", "compras",
+    "suscripciones", "otros_gastos",
+  ]),
+  monthlyLimit: z.number().min(1, "El límite debe ser mayor a 0"),
+});
+
 export type ProfileFormData = z.infer<typeof profileSchema>;
 export type VehicleFormData = z.infer<typeof vehicleSchema>;
 export type DailyEntryFormData = z.infer<typeof dailyEntrySchema>;
@@ -98,3 +123,5 @@ export type FuelRecordFormData = z.infer<typeof fuelRecordSchema>;
 export type MaintenanceFormData = z.infer<typeof maintenanceSchema>;
 export type WalletFormData = z.infer<typeof walletSchema>;
 export type GoalFormData = z.infer<typeof goalSchema>;
+export type TransactionFormData = z.infer<typeof transactionSchema>;
+export type BudgetFormData = z.infer<typeof budgetSchema>;

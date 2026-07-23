@@ -36,6 +36,7 @@ export interface DailyEntry {
   expenses: number;
   hoursWorked?: number;
   appsUsed: string[];
+  earningsByApp?: Record<string, number>;
   notes?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -96,7 +97,7 @@ export interface Wallet {
   updatedAt: Date;
 }
 
-export type WalletType = "vehicle" | "savings" | "investment" | "personal" | "other";
+export type WalletType = "moto" | "ahorro" | "inversiones" | "personales";
 
 export interface Goal {
   id: string;
@@ -111,9 +112,98 @@ export interface Goal {
   updatedAt: Date;
 }
 
+export interface Transaction {
+  id: string;
+  profileId: string;
+  type: "income" | "expense";
+  category: TransactionCategory;
+  amount: number;
+  date: Date;
+  description: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export type TransactionCategory =
+  | "trabajo"
+  | "inversiones"
+  | "comida"
+  | "transporte"
+  | "vivienda"
+  | "servicios"
+  | "entretenimiento"
+  | "salud"
+  | "educacion"
+  | "compras"
+  | "suscripciones"
+  | "otros_ingresos"
+  | "otros_gastos";
+
+export const INCOME_CATEGORIES: TransactionCategory[] = ["trabajo", "inversiones", "otros_ingresos"];
+export const EXPENSE_CATEGORIES: TransactionCategory[] = [
+  "comida", "transporte", "vivienda", "servicios",
+  "entretenimiento", "salud", "educacion", "compras",
+  "suscripciones", "otros_gastos",
+];
+
+export const CATEGORY_LABELS: Record<TransactionCategory, string> = {
+  trabajo: "Trabajo",
+  inversiones: "Inversiones",
+  otros_ingresos: "Otros ingresos",
+  comida: "Comida y bebida",
+  transporte: "Transporte",
+  vivienda: "Vivienda",
+  servicios: "Servicios",
+  entretenimiento: "Entretenimiento",
+  salud: "Salud",
+  educacion: "Educación",
+  compras: "Compras",
+  suscripciones: "Suscripciones",
+  otros_gastos: "Otros gastos",
+};
+
+export const CATEGORY_ICONS: Record<TransactionCategory, string> = {
+  trabajo: "Briefcase",
+  inversiones: "TrendingUp",
+  otros_ingresos: "PlusCircle",
+  comida: "UtensilsCrossed",
+  transporte: "Car",
+  vivienda: "Home",
+  servicios: "Zap",
+  entretenimiento: "Gamepad2",
+  salud: "HeartPulse",
+  educacion: "BookOpen",
+  compras: "ShoppingBag",
+  suscripciones: "Repeat",
+  otros_gastos: "MoreHorizontal",
+};
+
+export interface Budget {
+  id: string;
+  profileId: string;
+  category: TransactionCategory;
+  monthlyLimit: number;
+  month: number;
+  year: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface WalletDistribution {
   walletId: string;
   percentage: number;
+}
+
+export interface DistributionHistory {
+  id: string;
+  profileId: string;
+  date: Date;
+  earnings: number;
+  fuelCost: number;
+  expenses: number;
+  netIncome: number;
+  distribution: Record<WalletType, number>;
+  createdAt: Date;
 }
 
 export interface AppSettings {
@@ -124,6 +214,7 @@ export interface AppSettings {
   theme: "light" | "dark" | "system";
   walletDistribution: WalletDistribution[];
   onboardingCompleted: boolean;
+  dailyGoal: number;
   createdAt: Date;
   updatedAt: Date;
 }

@@ -8,6 +8,9 @@ import type {
   Wallet,
   Goal,
   AppSettings,
+  Transaction,
+  Budget,
+  DistributionHistory,
 } from "@/types";
 
 const db = new Dexie("RideControlDB") as Dexie & {
@@ -19,9 +22,12 @@ const db = new Dexie("RideControlDB") as Dexie & {
   wallets: EntityTable<Wallet, "id">;
   goals: EntityTable<Goal, "id">;
   settings: EntityTable<AppSettings, "id">;
+  transactions: EntityTable<Transaction, "id">;
+  budgets: EntityTable<Budget, "id">;
+  distributionHistory: EntityTable<DistributionHistory, "id">;
 };
 
-db.version(1).stores({
+db.version(2).stores({
   profiles: "id, createdAt",
   vehicles: "id, profileId, isActive, createdAt",
   dailyEntries: "id, vehicleId, date, createdAt",
@@ -30,6 +36,9 @@ db.version(1).stores({
   wallets: "id, profileId, type, isActive, createdAt",
   goals: "id, profileId, isCompleted, createdAt",
   settings: "id, profileId",
+  transactions: "id, profileId, type, category, date, createdAt",
+  budgets: "id, profileId, category, month, year",
+  distributionHistory: "id, profileId, date, createdAt",
 });
 
 export { db };

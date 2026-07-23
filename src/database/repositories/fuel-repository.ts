@@ -34,15 +34,18 @@ export const fuelRepository = {
   async getConsumption(vehicleId: string): Promise<number> {
     const records = await this.getByVehicle(vehicleId);
     if (records.length < 2) return 0;
-    
+
+    const fullTanks = records.filter((r) => r.isFull);
+    const use = fullTanks.length >= 2 ? fullTanks : records;
+
     let totalKm = 0;
     let totalLiters = 0;
-    
-    for (let i = 0; i < records.length - 1; i++) {
-      totalKm += records[i].kilometers;
-      totalLiters += records[i].amount;
+
+    for (let i = 0; i < use.length - 1; i++) {
+      totalKm += use[i].kilometers;
+      totalLiters += use[i + 1].amount;
     }
-    
+
     return totalLiters > 0 ? totalKm / totalLiters : 0;
   },
 
