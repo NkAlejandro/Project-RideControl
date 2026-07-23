@@ -17,37 +17,32 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ type: "spring", stiffness: 300, damping: 24 }}
+        transition={{ type: "spring", stiffness: 280, damping: 24 }}
       >
         {label && (
           <motion.label
-            className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider"
-            animate={{
-              color: focused ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.45)",
-              x: focused ? 2 : 0,
-            }}
-            transition={{ duration: 0.2 }}
+            className={`mb-1.5 block text-[11px] font-medium uppercase tracking-wider transition-colors duration-300 ${focused ? "text-secondary-color" : "text-muted-color"}`}
+            animate={{ x: focused ? 2 : 0 }}
+            transition={{ duration: 0.3 }}
           >
             {label}
           </motion.label>
         )}
         <div className="group relative">
           {icon && (
-            <motion.div
-              className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 z-[1]"
-              animate={{ color: focused ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.25)" }}
-              transition={{ duration: 0.2 }}
+            <div
+              className={`pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 z-[1] transition-colors duration-300 ${focused ? "text-secondary-color" : "text-muted-color"}`}
             >
               {icon}
-            </motion.div>
+            </div>
           )}
           <input
             ref={ref}
             onFocus={(e) => { setFocused(true); props.onFocus?.(e); }}
             onBlur={(e) => { setFocused(false); props.onBlur?.(e); }}
             className={cn(
-              "glass-input relative flex h-10 w-full rounded-xl px-3.5 text-[15px] text-white/90 transition-all duration-300",
-              "placeholder:text-white/25 placeholder:transition-all placeholder:duration-300",
+              "glass-input relative flex h-10 w-full rounded-xl px-3.5 text-[15px] text-primary-color transition-all duration-300",
+              "placeholder:text-muted-color placeholder:transition-all placeholder:duration-300",
               "focus:outline-none",
               "disabled:cursor-not-allowed disabled:opacity-30",
               "selection:bg-white/20 selection:text-white",
@@ -59,7 +54,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             {...props}
           />
           {rightIcon && (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 transition-colors duration-300 group-focus-within:text-white/60 z-[1]">
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-color transition-colors duration-300 group-focus-within:text-secondary-color z-[1]">
               {rightIcon}
             </div>
           )}
@@ -71,7 +66,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
               initial={{ opacity: 0, y: -4, x: -4 }}
               animate={{ opacity: 1, y: 0, x: 0 }}
               exit={{ opacity: 0, y: -2 }}
-              transition={{ type: "spring", stiffness: 500, damping: 22 }}
+              transition={{ type: "spring", stiffness: 280, damping: 24 }}
               className="mt-1 text-[10px] font-medium text-red-400/80"
             >
               {error}

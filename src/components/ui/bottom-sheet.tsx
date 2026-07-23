@@ -23,8 +23,8 @@ export function BottomSheet({ isOpen, onClose, title, children, className }: Bot
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.25 }}
-                className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm"
+                transition={{ duration: 0.35 }}
+                className="fixed inset-0 z-50 bg-overlay"
               />
             </Dialog.Overlay>
             <Dialog.Content asChild>
@@ -32,7 +32,7 @@ export function BottomSheet({ isOpen, onClose, title, children, className }: Bot
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
+                transition={{ duration: 0.3 }}
                 className="fixed inset-0 z-50 flex flex-col justify-end p-0 overflow-y-auto"
                 onClick={onClose}
               >
@@ -50,11 +50,11 @@ export function BottomSheet({ isOpen, onClose, title, children, className }: Bot
                   >
                     {title && (
                       <div className="mb-4 flex items-center justify-between sm:mb-5">
-                        <Dialog.Title className="text-lg font-semibold text-white/90">
+                        <Dialog.Title className="text-lg font-semibold text-primary-color">
                           {title}
                         </Dialog.Title>
                         <Dialog.Close asChild>
-                          <button className="flex h-8 w-8 items-center justify-center rounded-full bg-white/[0.06] text-white/50 transition-colors hover:bg-white/[0.12] hover:text-white/80 shrink-0">
+                          <button className="flex h-8 w-8 items-center justify-center rounded-full bg-hover text-secondary-color transition-colors hover:bg-hover hover:text-primary-color shrink-0">
                             <X className="h-4 w-4" />
                           </button>
                         </Dialog.Close>

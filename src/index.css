@@ -176,6 +176,13 @@
   --bg-card: #f8f8f8;
   --bg-input: #f0f0f0;
   --bg-hover: #e4e4e4;
+  --bg-elevated: #f0f0f0;
+  --overlay: rgba(0, 0, 0, 0.4);
+  --text-on-primary: #ffffff;
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-bg-hover: rgba(0, 0, 0, 0.05);
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-shine: rgba(0, 0, 0, 0.04);
   --border-subtle: #e4e4e4;
   --border-medium: #d1d1d1;
 
@@ -204,6 +211,13 @@
   --bg-card: #111111;
   --bg-input: #111111;
   --bg-hover: #171717;
+  --bg-elevated: #121212;
+  --overlay: rgba(0, 0, 0, 0.7);
+  --text-on-primary: #ffffff;
+  --glass-bg: rgba(20, 20, 24, 0.45);
+  --glass-bg-hover: rgba(255, 255, 255, 0.12);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-shine: rgba(255, 255, 255, 0.08);
   --border-subtle: rgba(255, 255, 255, 0.08);
   --border-medium: rgba(255, 255, 255, 0.12);
 
@@ -219,6 +233,7 @@
     scroll-behavior: smooth;
     overflow-x: hidden;
     -webkit-text-size-adjust: 100%;
+    overscroll-behavior-y: contain;
   }
 
   body {
@@ -270,6 +285,12 @@
 @utility bg-hover {
   background-color: var(--bg-hover);
 }
+@utility bg-elevated {
+  background-color: var(--bg-elevated);
+}
+@utility bg-overlay {
+  background-color: var(--overlay);
+}
 
 @utility text-primary-color {
   color: var(--text-primary);
@@ -282,6 +303,9 @@
 }
 @utility text-inverse-color {
   color: var(--text-inverse);
+}
+@utility text-on-primary {
+  color: var(--text-on-primary);
 }
 
 @utility border-theme-subtle {
@@ -695,8 +719,8 @@
   .glass-modal {
     backdrop-filter: blur(48px) saturate(200%) brightness(1.08);
     -webkit-backdrop-filter: blur(48px) saturate(200%) brightness(1.08);
-    background: rgba(20, 20, 24, 0.45);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
     box-shadow:
       inset 0 0.5px 0 rgba(255,255,255,0.12),
       inset 0 -0.5px 0 rgba(255,255,255,0.04),
@@ -746,15 +770,15 @@
   .glass-input {
     backdrop-filter: blur(12px) saturate(140%) brightness(1.04);
     -webkit-backdrop-filter: blur(12px) saturate(140%) brightness(1.04);
-    background: rgba(28, 28, 32, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.08);
   }
 
   .glass-input:focus-within {
-    background: rgba(28, 28, 32, 0.25);
-    border-color: rgba(255, 255, 255, 0.18);
+    background: var(--glass-bg);
+    border-color: var(--glass-border);
     box-shadow:
       inset 0 0.5px 0 rgba(255,255,255,0.1),
       0 0 0 1px rgba(255,255,255,0.05),
@@ -764,14 +788,14 @@
   .glass-btn {
     backdrop-filter: blur(16px) saturate(160%) brightness(1.05);
     -webkit-backdrop-filter: blur(16px) saturate(160%) brightness(1.05);
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.12);
   }
 
   .glass-btn:hover {
-    background: rgba(255, 255, 255, 0.12);
+    background: var(--glass-bg-hover);
     border-color: rgba(255, 255, 255, 0.18);
     transform: translateY(-1px);
     box-shadow:
