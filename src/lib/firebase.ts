@@ -8,20 +8,20 @@ let database: Database | null = null;
 let auth: Auth | null = null;
 let messaging: Messaging | null = null;
 
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyC7FMr7eobA8Z0d5aeg__A2eQ1n--sboWk",
+  authDomain: "ridecontrol-1caa4.firebaseapp.com",
+  databaseURL: "https://ridecontrol-1caa4-default-rtdb.firebaseio.com",
+  projectId: "ridecontrol-1caa4",
+  storageBucket: "ridecontrol-1caa4.firebasestorage.app",
+  messagingSenderId: "731042322632",
+  appId: "1:731042322632:web:e2024b3e5594b927a9edfd",
+  measurementId: "G-TSSB0HVWT6",
+};
+
 export function getFirebaseApp(): FirebaseApp | null {
   if (app) return app;
-  const apiKey = import.meta.env.VITE_FIREBASE_API_KEY;
-  if (!apiKey) return null;
-  app = initializeApp({
-    apiKey,
-    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-    databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL,
-    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-    appId: import.meta.env.VITE_FIREBASE_APP_ID,
-    measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
-  });
+  app = initializeApp(FIREBASE_CONFIG);
   return app;
 }
 
@@ -50,5 +50,5 @@ export function getFirebaseMessaging(): Messaging | null {
 }
 
 export function getVapidKey(): string | null {
-  return import.meta.env.VITE_FIREBASE_VAPID_KEY || null;
+  return "BAji3MKsaTSOnzE_wPQd3Wf28tX5Xjk_QVIl-OXUz-sw97QO-FTdBNurigEVfXcPlfq0mKQhmZ1GhkbiUtAD1-I";
 }

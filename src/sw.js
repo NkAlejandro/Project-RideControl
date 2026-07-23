@@ -4,8 +4,20 @@ import { StaleWhileRevalidate } from "workbox-strategies";
 import { initializeApp } from "firebase/app";
 import { getMessaging, onBackgroundMessage } from "firebase/messaging/sw";
 
+self.skipWaiting();
+
 precacheAndRoute(self.__WB_MANIFEST);
 cleanupOutdatedCaches();
+
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    (async () => {
+      const cacheKeys = await caches.keys();
+      await Promise.all(cacheKeys.map((key) => caches.delete(key)));
+      await self.clients.claim();
+    })(),
+  );
+});
 
 registerRoute(
   ({ request }) => request.destination === "image" || request.destination === "font",
