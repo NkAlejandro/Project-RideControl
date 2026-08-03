@@ -102,8 +102,11 @@ export const walletRepository = {
 
     for (const wallet of wallets) {
       const share = result[wallet.type as keyof typeof result] ?? 0;
+      const deduction =
+        (wallet.type === "personales" ? expenses : 0) +
+        (wallet.type === "moto" ? fuelCost : 0);
       await db.wallets.update(wallet.id, {
-        balance: wallet.balance + share,
+        balance: wallet.balance + share - deduction,
         updatedAt: new Date(),
       });
     }

@@ -485,6 +485,7 @@ export default function DailyClosePage() {
         ) : (
           <motion.form
             key="form"
+            noValidate
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
@@ -517,76 +518,89 @@ export default function DailyClosePage() {
                 <motion.div variants={sectionSlideUp}>
                   <Input
                     label="Ingresos del día"
-                    type="number"
-                    step="100"
+                    type="text"
+                    inputMode="numeric"
                     placeholder="0"
                     icon={<DollarSign className="h-4 w-4" />}
                     error={errors.earnings?.message}
                     className="focus-ring"
-                    {...register("earnings", { valueAsNumber: true })}
+                    {...register("earnings")}
                   />
                 </motion.div>
 
                 <motion.div variants={sectionSlideUp}>
                   <Input
                     label="Kilómetros recorridos"
-                    type="number"
-                    step="0.1"
+                    type="text"
+                    inputMode="decimal"
                     placeholder="0"
                     icon={<MapPin className="h-4 w-4" />}
                     className="focus-ring"
                     error={errors.kilometers?.message}
-                    {...register("kilometers", { valueAsNumber: true })}
+                    {...register("kilometers")}
                   />
                 </motion.div>
 
                 <motion.div variants={sectionSlideUp} className="grid grid-cols-2 gap-3">
                   <Input
                     label="Litros de gasolina"
-                    type="number"
-                    step="0.1"
+                    type="text"
+                    inputMode="decimal"
                     placeholder="0"
                     icon={<Fuel className="h-4 w-4" />}
                     className="focus-ring"
                     error={errors.fuelAmount?.message}
-                    {...register("fuelAmount", { valueAsNumber: true })}
+                    {...register("fuelAmount")}
                   />
                   <Input
                     label="Costo del tanqueo"
-                    type="number"
-                    step="100"
+                    type="text"
+                    inputMode="numeric"
                     placeholder="0"
                     icon={<DollarSign className="h-4 w-4" />}
                     className="focus-ring"
                     error={errors.fuelCost?.message}
-                    {...register("fuelCost", { valueAsNumber: true })}
+                    {...register("fuelCost")}
                   />
                 </motion.div>
 
                 <motion.div variants={sectionSlideUp}>
                   <Input
                     label="Gastos del día"
-                    type="number"
-                    step="100"
+                    type="text"
+                    inputMode="numeric"
                     placeholder="0"
                     icon={<ShoppingBag className="h-4 w-4" />}
                     className="focus-ring"
                     error={errors.expenses?.message}
-                    {...register("expenses", { valueAsNumber: true })}
+                    {...register("expenses")}
                   />
                 </motion.div>
 
-                <motion.div variants={sectionSlideUp}>
+                <motion.div variants={sectionSlideUp} className="space-y-2">
                   <Input
                     label="Horas trabajadas"
-                    type="number"
-                    step="0.5"
-                    placeholder="Opcional"
+                    type="text"
+                    inputMode="decimal"
+                    placeholder="ej. 5.5"
                     icon={<Clock className="h-4 w-4" />}
                     className="focus-ring"
                     error={errors.hoursWorked?.message as string | undefined}
-                    {...register("hoursWorked", { valueAsNumber: true })}
+                    {...register("hoursWorked")}
                   />
+                  <div className="flex flex-wrap gap-1.5">
+                    {[4, 6, 8, 10, 12].map((h) => (
+                      <motion.button
+                        key={h}
+                        type="button"
+                        whileTap={{ scale: 0.92 }}
+                        onClick={() => setValue("hoursWorked", h)}
+                        className="rounded-full border border-theme-subtle bg-hover px-3 py-1 text-xs font-medium text-secondary-color transition-colors hover:border-theme-medium hover:text-primary-color"
+                      >
+                        {h} h
+                      </motion.button>
+                    ))}
+                  </div>
                 </motion.div>
 
                 <motion.div variants={sectionSlideUp} className="border-t border-theme-subtle pt-5">
@@ -639,8 +653,8 @@ export default function DailyClosePage() {
                           <Input
                             key={app}
                             label={app}
-                            type="number"
-                            step="100"
+                            type="text"
+                            inputMode="numeric"
                             placeholder="0"
                             icon={<DollarSign className="h-4 w-4" />}
                             value={watch(fieldName) ?? ""}

@@ -17,7 +17,7 @@ export const vehicleSchema = z.object({
   isActive: z.boolean().default(true),
 });
 
-const numOrZero = () => z.number().catch(0).pipe(z.number().min(0));
+const numOrZero = () => z.coerce.number().catch(0).pipe(z.number().min(0));
 
 export const dailyEntrySchema = z.object({
   vehicleId: z.string().min(1),
@@ -27,7 +27,10 @@ export const dailyEntrySchema = z.object({
   fuelAmount: numOrZero(),
   fuelCost: numOrZero(),
   expenses: numOrZero(),
-  hoursWorked: z.preprocess((v) => (typeof v === "number" && isNaN(v) ? undefined : v), z.number().min(0).optional()),
+  hoursWorked: z.preprocess(
+    (v) => (v === "" || v == null ? undefined : v),
+    z.coerce.number().min(0).optional()
+  ),
   appsUsed: z.array(z.string()).default([]),
   earningsByApp: z.record(z.string(), z.number()).optional(),
   notes: z.string().optional(),
