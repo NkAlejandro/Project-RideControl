@@ -1,12 +1,11 @@
-# 🏍️ RideControl
+ RideControl
 
 **Control financiero inteligente para motociclistas y domiciliarios.**
 
 RideControl es una aplicación web progresiva (PWA) que permite gestionar ingresos, gastos, vehículos, metas de ahorro y presupuestos. Diseñada para motociclistas que necesitan llevar cuentas claras de su día a día, con sincronización en tiempo real y dashboard analítico.
 
 ---
-
-## ✨ Funcionalidades
+ Funcionalidades
 
 ### 🚗 Gestión de Vehículos
 - Registro de múltiples vehículos con kilometraje, marca, modelo y placa.
@@ -14,7 +13,7 @@ RideControl es una aplicación web progresiva (PWA) que permite gestionar ingres
 - Historial de combustible (galones, precio, kilometraje).
 - Mantenimiento preventivo y correctivo con alertas por kilometraje.
 
-### 💰 Finanzas personales
+ Finanzas personales
 - **Dashboard financiero**: resumen de ingresos, gastos, distribución de cartera.
 - **Transacciones**: registro de ingresos y gastos por categoría con búsqueda y filtros.
 - **Presupuestos mensuales**: fija límites por categoría de gasto y monitorea progreso.
@@ -22,7 +21,7 @@ RideControl es una aplicación web progresiva (PWA) que permite gestionar ingres
 - **Metas de ahorro**: crea objetivos financieros con seguimiento visual de progreso.
 - **Motor financiero**: calcula automáticamente la distribución de ingresos según porcentajes predefinidos, descontando costos operativos (gasolina, mantenimiento).
 
-### 🤖 Asistente IA
+ Asistente IA
 - Chat integrado con Google Gemini para consultar:
   - Resumen general de finanzas.
   - Últimas transacciones.
@@ -32,19 +31,19 @@ RideControl es una aplicación web progresiva (PWA) que permite gestionar ingres
   - Crear y actualizar metas de ahorro.
 - Sin necesidad de configuración — funciona con una API key integrada.
 
-### 📊 Reportes y Estadísticas
+Reportes y Estadísticas
 - Reportes diarios con cierre detallado.
 - Estadísticas visuales con gráficos.
 - Exportación de datos.
 
-### 🔄 Sincronización
+ Sincronización
 - Sincronización en tiempo real con Firebase Realtime Database.
 - Modo offline con IndexedDB (Dexie.js).
 - Los datos se almacenan localmente y se sincronizan cuando hay conexión.
 
 ---
 
-## 🛠️ Stack Tecnológico
+ Stack Tecnológico
 
 | Capa         | Tecnología                                                       |
 |-------------|------------------------------------------------------------------|
@@ -63,7 +62,7 @@ RideControl es una aplicación web progresiva (PWA) que permite gestionar ingres
 
 ---
 
-## 🚀 Inicio Rápido
+ Inicio Rápido
 
 ### Requisitos
 - Node.js 18+
@@ -113,7 +112,7 @@ npm run deploy
 
 ---
 
-## 🏗️ Arquitectura
+##  Arquitectura
 
 ```
 src/
@@ -165,7 +164,7 @@ Los datos se escriben primero en IndexedDB (para respuesta instantánea) y luego
 
 ---
 
-## 🗄️ Modelo de Datos
+##  Modelo de Datos
 
 - **Profile**: perfil del usuario (nombre, email).
 - **Vehicle**: vehículos registrados (marca, modelo, km, etc.).
@@ -194,7 +193,7 @@ Los datos se escriben primero en IndexedDB (para respuesta instantánea) y luego
 
 ---
 
-## 🌐 Despliegue
+##  Despliegue
 
 La app está desplegada en Firebase Hosting:
 
@@ -212,7 +211,7 @@ Este script vigila cambios en la carpeta `src/` y ejecuta automáticamente `buil
 
 ---
 
-## 🤝 Contribuir
+##  Contribuir
 
 1. Fork el proyecto.
 2. Crea una rama (`git checkout -b feature/nueva-funcionalidad`).
