@@ -7,7 +7,7 @@ RideControl es una aplicación web progresiva (PWA) que permite gestionar ingres
 ---
  Funcionalidades
 
-### 🚗 Gestión de Vehículos
+###  Gestión de Vehículos
 - Registro de múltiples vehículos con kilometraje, marca, modelo y placa.
 - Seguimiento de entrada diaria (km inicio, km fin, ingresos, gastos operativos).
 - Historial de combustible (galones, precio, kilometraje).
